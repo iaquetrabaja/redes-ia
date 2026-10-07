@@ -1,0 +1,63 @@
+{% macro hace(n) %}{% if n is not none %}{{ 'hoy' if n <= 0 else ('ayer' if n == 1 else 'hace ' ~ n ~ ' días') }}{% endif %}{% endmacro %}
+
+{% macro tarjeta_idea(i, en_marcha) %}
+<div class="card idea2" id="idea-{{ i.id }}">
+  <div class="idea-head">
+    <div class="meta">
+      <span class="badge {{ 'accent' if i.tipo in ('tendencia','automatizacion','propia') }}">{{ TIPOS.get(i.tipo, 'Idea') }}</span>
+      {% if i.estado != 'nueva' %}<span class="badge">{{ i.estado }}</span>{% endif %}
+      {% if i.edad is not none %}<span class="badge {{ 'accent' if i.edad <= 0 }}">{{ hace(i.edad) }}</span>{% endif %}
+      {% if i.gnota %}<span class="badge {{ 'ok' if i.gnota.score >= 70 else ('err' if i.gnota.score < 45 else '') }}" title="Nota del gancho{% if i.gnota.peor %} · punto débil: {{ i.gnota.peor }}{% endif %}">Gancho {{ i.gnota.score|round|int }}</span>{% endif %}
+    </div>
+    {% if i.nota is not none %}<div class="score {{ 'hi' if i.nota >= 8 else ('mid' if i.nota >= 6 else 'lo') }}" title="{{ i.motivo_nota or '' }}">{{ '%.1f'|format(i.nota) }}<small>/10</small></div>{% endif %}
+  </div>
+  <h3>{{ i.titulo }}</h3>
+  {% if i.motivo_nota %}<p class="hint">{{ i.motivo_nota }}</p>{% endif %}
+  {% set au = i.det.automatizacion if i.det else none %}
+  <dl>
+    {% if i.gancho %}<dt>Gancho</dt><dd>«{{ i.gancho }}»</dd>{% endif %}
+    {% if au %}
+      {% if au.momento_wow %}<dt>Segundo 0-2</dt><dd>{{ au.momento_wow }}</dd>{% endif %}
+      {% if au.que_automatiza %}<dt>Qué hace</dt><dd>{{ au.que_automatiza }}</dd>{% endif %}
+      {% if au.oficios %}<dt>Sirve para</dt><dd>{{ au.oficios|join(', ') if au.oficios is not string else au.oficios }}</dd>{% endif %}
+      <dt>Ahorro</dt><dd>{{ au.ahorro or '—' }}{% if au.tiempo_montaje %} · se monta en {{ au.tiempo_montaje }}{% endif %}</dd>
+      {% if au.herramientas %}<dt>Con</dt><dd>{% for h in au.herramientas %}{% if h is mapping %}<b>{{ h.nombre }}</b> ({{ h.coste }}){% else %}{{ h }}{% endif %}{{ ', ' if not loop.last }}{% endfor %}</dd>{% endif %}
+    {% endif %}
+    {% if i.por_que %}<dt>Por qué</dt><dd>{{ i.por_que }}</dd>{% endif %}
+    {% if i.como %}<dt>Cómo</dt><dd style="white-space:pre-line">{{ i.como }}</dd>{% endif %}
+  </dl>
+  {% if au and au.limites %}<p class="hint">Límites: {{ au.limites }}</p>{% endif %}
+  {% if i.v_url or i.t_url %}
+  <div class="originals">
+    {% if i.v_url %}<p class="meta">Vídeo de referencia</p><a class="orig trend" href="{{ i.v_url }}" target="_blank" rel="noopener noreferrer"><span class="src">{{ REDES.get(i.v_red, i.v_red) }}</span><span><b>@{{ i.v_usuario }}</b><br><small class="cap">{{ (i.v_texto or '')[:120] }}</small></span></a>{% endif %}
+    {% if i.t_url %}<p class="meta">Tendencia</p><a class="orig trend" href="{{ i.t_url }}" target="_blank" rel="noopener noreferrer"><span class="src">{{ i.t_etiqueta }}</span><span><b>{{ i.t_titulo }}</b></span></a>{% endif %}
+  </div>
+  {% endif %}
+  {% set g = i.det.guion if i.det else none %}
+  {% if g %}
+  <details class="guion-box" open>
+    <summary><b>Guion listo para grabar</b> <small class="muted">· {{ g.creado }}{% if g.ritmo %} · ≈ {{ g.ritmo.total_s|round(1) }} s{% endif %}{% if g.humano %} · suena humano {{ g.humano.human_score|round|int }}/100{% endif %}{% if g.versiones and g.versiones > 1 %} · {{ g.versiones }} versiones{% endif %}</small></summary>
+    {% if g.ganchos %}<p class="meta mt">Ganchos (el de mejor nota abre el vídeo)</p>
+    <table>{% for h in g.ganchos %}<tr><td>{% if h.nota is not none %}<b>{{ h.nota|round|int }}</b>{% endif %}</td><td>«{{ h.texto }}»{% if h.formula %} <small class="muted">· {{ h.formula }}</small>{% endif %}{% for a in h.avisos %}<br><small class="chk WARN">{{ a }}</small>{% endfor %}</td></tr>{% endfor %}</table>{% endif %}
+    {% if g.guion %}<p class="meta mt">Guion</p>
+    <table>{% for x in g.guion %}{% set b = g.ritmo.beats[loop.index0] if g.ritmo and g.ritmo.beats|length > loop.index0 else none %}
+      <tr><td class="t">{% if b %}{{ b.inicio }}{% endif %}</td><td>{{ x.texto }}{% if x.rotulo %}<br><small class="badge">{{ x.rotulo }}</small>{% endif %}{% if x.pantalla %}<br><small class="muted">{{ x.pantalla }}</small>{% endif %}</td></tr>{% endfor %}</table>
+    {% for a in (g.ritmo.avisos if g.ritmo else []) %}<p class="chk WARN">· {{ a }}</p>{% endfor %}{% endif %}
+    {% for clave, lbl in (("pie_instagram","Texto del post de Instagram"),("descripcion_tiktok","Descripción de TikTok")) %}{% set p = g[clave] %}{% if p and p.texto %}
+    <p class="meta mt">{{ lbl }} <button type="button" class="btn ghost sm" data-copy="{{ p.texto }}">Copiar</button></p>
+    {% if p.revision %}<div class="feed-box">{{ p.revision.lo_que_se_ve }}<span class="muted"> … más</span></div>{% endif %}
+    <p style="white-space:pre-line;font-size:13px">{{ p.texto }}</p>
+    {% if p.revision %}{% for c in p.revision.checks %}<span class="chk {{ c.estado }}">{{ c.estado }} {{ c.check }}{% if c.detalle %}: {{ c.detalle }}{% endif %}</span><br>{% endfor %}{% endif %}
+    {% endif %}{% endfor %}
+    {% if g.palabra %}<p class="ask">Palabra clave para el cierre: <b>{{ g.palabra }}</b></p>{% endif %}
+  </details>
+  {% endif %}
+  <div class="actions">
+    {% set preparando = ('guion-' ~ i.id) in en_marcha %}
+    <form class="inline" method="post" action="/ideas/{{ i.id }}/guion"><button class="btn sm" {{ 'disabled' if preparando }}>{{ 'Preparando guion…' if preparando else ('Rehacer guion' if g else 'Preparar guion') }}</button></form>
+    {% for s, l in (("guardada","Guardar"),("hecha","Hecha"),("descartada","Descartar")) %}{% if i.estado != s %}
+    <form class="inline" method="post" action="/ideas/{{ i.id }}/estado"><input type="hidden" name="estado" value="{{ s }}"><button class="btn ghost sm">{{ l }}</button></form>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+{% endmacro %}

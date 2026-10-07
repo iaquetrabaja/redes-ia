@@ -1,0 +1,11 @@
+# Opcional: Redes IA en Docker. Abre http://127.0.0.1:8765
+# Solo se publica en 127.0.0.1 de tu ordenador: nadie de fuera puede entrar.
+services:
+  redes-ia:
+    build: .
+    container_name: redes-ia
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - ./datos:/app/datos

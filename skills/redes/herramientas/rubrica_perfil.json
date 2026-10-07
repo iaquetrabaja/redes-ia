@@ -1,0 +1,91 @@
+{
+  "version": "1.0",
+  "total": 100,
+  "nota": "Doce puntos. Puntúa cada uno con honestidad: una nota generosa no ayuda a nadie. Casi todos los perfiles sacan entre 30 y 45 la primera vez. El reparto es a propósito: el nombre, la primera línea de la bio y las tres publicaciones fijadas valen más que la foto, porque es lo que procesa un desconocido que llega desde un vídeo antes de decidir si te sigue. Vale para Instagram y, con las notas de «tiktok», para TikTok. Traducido de instagram-agent-skill (Jake Schincariol, MIT).",
+  "items": [
+    {
+      "id": "nombre",
+      "puntos": 12,
+      "nota_maxima": "El campo de nombre (30 caracteres, la línea en negrita, no el @) lleva el nombre más lo que haces con las palabras que busca la gente: «David García | Automatizaciones con IA». Instagram busca en este campo y casi todas las cuentas lo gastan solo en el nombre.",
+      "fallo_tipico": "Solo el nombre, o el nombre con un emoji.",
+      "tiktok": "En TikTok el nombre también sale en la búsqueda: mismo formato."
+    },
+    {
+      "id": "bio_primera_linea",
+      "puntos": 12,
+      "nota_maxima": "La primera línea dice para quién es esto y qué cambia para esa persona, con sus palabras. Ni un cargo, ni una lista de adjetivos, ni tres emojis separados por barras.",
+      "fallo_tipico": "«Emprendedor | Amante del café | Padre de perro».",
+      "tiktok": "La bio de TikTok tiene 80 caracteres: aquí solo cabe esta línea, así que tiene que hacerlo todo."
+    },
+    {
+      "id": "bio_resto",
+      "puntos": 8,
+      "nota_maxima": "El resto de los 150 caracteres lleva una prueba o una oferta concreta, escrita como frases y no como lista con barras.",
+      "fallo_tipico": "Sopa de palabras clave, o hueco en blanco.",
+      "tiktok": "No aplica igual: con 80 caracteres, la prueba va en los vídeos fijados."
+    },
+    {
+      "id": "fijados",
+      "puntos": 10,
+      "nota_maxima": "Tres publicaciones fijadas arriba del todo haciendo tres trabajos distintos: la mejor prueba, la explicación más clara de lo que ofreces y la mejor presentación de quién eres. No los tres con más visitas por casualidad.",
+      "fallo_tipico": "Nada fijado, así que arriba sale lo último que se publicó.",
+      "tiktok": "TikTok también deja fijar tres vídeos: mismo criterio."
+    },
+    {
+      "id": "enlace",
+      "puntos": 8,
+      "nota_maxima": "Un destino que cumple lo que promete la bio. Se permiten hasta cinco enlaces; más de dos ya es un menú, y un menú convierte peor que una puerta.",
+      "fallo_tipico": "Un árbol de enlaces con once opciones, o ningún enlace.",
+      "tiktok": "En TikTok el enlace en la bio depende de tener cuenta de empresa o suficientes seguidores."
+    },
+    {
+      "id": "destacadas",
+      "puntos": 8,
+      "nota_maxima": "De cuatro a seis historias destacadas con el nombre de las preguntas que hace un cliente: Precios, Resultados, Cómo funciona, Quién soy. Portadas coherentes. Nada de hace más de un año delante.",
+      "fallo_tipico": "«Random», «Vida», «Favs», o catorce destacadas sin orden.",
+      "tiktok": "No hay destacadas: usa listas de reproducción con esos mismos nombres."
+    },
+    {
+      "id": "cuadricula",
+      "puntos": 8,
+      "nota_maxima": "Las nueve primeras portadas se leen a tamaño miniatura y dicen de qué va la cuenta sin tocar nada. Las portadas de los vídeos se eligen, no se dejan en el primer fotograma.",
+      "fallo_tipico": "Nueve portadas de una cara a mitad de frase y sin texto.",
+      "tiktok": "Igual en TikTok: la portada se elige al publicar y lleva tres o cuatro palabras."
+    },
+    {
+      "id": "foto",
+      "puntos": 6,
+      "nota_maxima": "La cara llena más o menos el 60 % de un círculo que se ve a unos 40 píxeles. Ojos visibles, foto de los últimos dos años, fondo que no compite.",
+      "fallo_tipico": "Foto de cuerpo entero, un logotipo en una marca personal o una foto oscura hecha con el brazo estirado.",
+      "tiktok": "Igual."
+    },
+    {
+      "id": "usuario",
+      "puntos": 6,
+      "nota_maxima": "Se lee, se puede decir en voz alta y es el mismo en todas las redes. Sin guiones bajos encadenados ni números haciendo de letras.",
+      "fallo_tipico": "Un @ que nadie sabe escribir después de oírlo una vez.",
+      "tiktok": "Igual: mismo @ en las dos redes."
+    },
+    {
+      "id": "categoria_contacto",
+      "puntos": 6,
+      "nota_maxima": "Cuenta profesional con una categoría que encaja con lo que ofreces y botones de contacto que funcionan. Un correo que se mira, no el de 2019.",
+      "fallo_tipico": "Cuenta personal, así que no hay estadísticas ni botón de contacto.",
+      "tiktok": "Cuenta de empresa o de creador para tener estadísticas."
+    },
+    {
+      "id": "actividad",
+      "puntos": 10,
+      "nota_maxima": "Ha publicado en los últimos siete días y ha contestado comentarios en la última publicación. Una cuenta que publicó por última vez en marzo parece cerrada.",
+      "fallo_tipico": "Cinco semanas sin publicar, o un muro de comentarios sin contestar.",
+      "tiktok": "Igual."
+    },
+    {
+      "id": "historias",
+      "puntos": 6,
+      "nota_maxima": "Hay una historia subida ahora mismo, o casi todos los días. Es la diferencia entre un perfil y una persona.",
+      "fallo_tipico": "Nunca hay círculo de historia.",
+      "tiktok": "Las historias de TikTok pesan menos: cuenta más publicar vídeos con regularidad."
+    }
+  ]
+}

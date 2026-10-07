@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Resumen{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Resumen</h1><p>Tus vídeos publicados en los últimos {{ dias }} días, comparados con los {{ dias }} anteriores.</p></div>
+  <div class="row" style="align-items:center">
+    <div class="seg">
+      <a href="?dias={{ dias }}" class="{{ 'on' if not red }}">Todo</a>
+      {% for k, l in REDES.items() %}<a href="?dias={{ dias }}&red={{ k }}" class="{{ 'on' if red == k }}">{{ l }}</a>{% endfor %}
+    </div>
+    <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}{% if red %}&red={{ red }}{% endif %}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
+    <form method="post" action="/actualizar"><button class="btn secondary">Actualizar datos</button></form>
+  </div>
+</div>
+
+{% if not hay_cuentas %}
+<div class="empty mb-l">Aún no has añadido tu cuenta. Ve a <a href="/ajustes?tab=redes">Ajustes → Redes</a> y pon tu usuario de TikTok (y, si quieres, conecta Instagram).</div>
+{% endif %}
+
+<div class="grid g5 kpis mb-l">
+  {% for k, l in (("vistas","Vistas"),("likes","Me gusta"),("comentarios","Comentarios"),("compartidos","Compartidos"),("guardados","Guardados")) %}
+  {% set x = r.kpis[k] %}
+  <div class="card stat"><div class="label">{{ l }}</div>
+    {% if x.hay %}<div class="value">{{ x.valor|miles }}</div>
+    <div class="delta">{% if x.cambio is not none %}<span class="{{ 'up' if x.cambio >= 0 else 'down' }}">{{ '+' if x.cambio >= 0 }}{{ x.cambio }}%</span> vs. antes{% else %}{{ r.kpis.publicaciones.valor }} vídeos{% endif %}</div>
+    {% else %}<div class="value na">No disponible</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid g2 mb-l">
+  <div class="card">
+    <div class="section-head"><h2>Seguidores</h2></div>
+    {% for s in r.seguidores %}
+    <div class="row mb" style="justify-content:space-between;align-items:center">
+      <div><b>{{ REDES.get(s.red, s.red) }}</b> <span class="muted">@{{ s.usuario }}</span>{% if s.error %}<br><small class="chk FAIL">{{ s.error[:120] }}</small>{% endif %}</div>
+      <div class="num"><b>{{ s.seguidores|miles }}</b>{% if s.ganados is not none %} <small class="{{ 'up' if s.ganados >= 0 else 'down' }}">{{ '+' if s.ganados >= 0 }}{{ s.ganados|miles }}</small>{% endif %}</div>
+    </div>
+    {% if s.serie|length > 1 %}{% set mx = s.serie|map(attribute='seguidores')|max %}{% set mn = s.serie|map(attribute='seguidores')|min %}
+    <div class="mini-chart mb">{% for p in s.serie %}<i style="height:{{ 8 + (92 * (p.seguidores - mn) / ((mx - mn) or 1))|round }}%" title="{{ p.fecha }}: {{ p.seguidores }}"></i>{% endfor %}</div>{% endif %}
+    {% else %}<p class="muted">Sin cuentas propias todavía.</p>{% endfor %}
+  </div>
+  <div class="card">
+    <div class="section-head"><h2>Últimas tareas</h2><a class="hint" href="/ajustes?tab=general">Programación</a></div>
+    {% for t in tareas %}<p class="mb-s"><span class="chk {{ 'PASS' if t.estado == 'ok' else ('FAIL' if t.estado == 'error' else 'WARN') }}">{{ t.estado }}</span> <b>{{ t.tipo }}</b> <small class="muted">{{ (t.inicio or '')[:16] }}</small><br><small class="muted">{{ (t.detalle or '')[:140] }}</small></p>
+    {% else %}<p class="muted">Todavía no se ha ejecutado nada.</p>{% endfor %}
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Tus vídeos del periodo</h2><span class="muted">ordenados por vistas</span></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Vídeo</th><th class="r">Vistas</th><th class="r">× tu media</th><th class="r">Me gusta</th><th class="r">Compartidos</th><th class="r">Guardados</th></tr></thead>
+    <tbody>{% for v in r.top %}
+      <tr><td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ (v.texto or '(sin texto)')[:80] }}</a><br><small class="muted">{{ REDES.get(v.red, v.red) }} · {{ (v.publicado or '')[:10] }}</small></td>
+      <td class="r num">{{ v.vistas|miles }}</td><td class="r num">{% if v.multiplo %}x{{ v.multiplo }}{% else %}—{% endif %}</td>
+      <td class="r num">{{ v.likes|miles }}</td><td class="r num">{{ v.compartidos|miles }}</td><td class="r num">{{ v.guardados|miles }}</td></tr>
+    {% else %}<tr><td colspan="6" class="muted">Sin vídeos en este periodo.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

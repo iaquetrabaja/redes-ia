@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Estudio{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Estudio</h1><p>Lo que funciona en tus vídeos, los comentarios que merecen respuesta, el plan de la semana y tu voz. Nada se publica solo: tú decides.</p></div>
+</div>
+<div class="tabs">
+  {% for k, l in (("auditoria","Auditoría"),("comentarios","Comentarios"),("plan","Plan de la semana"),("voz","Voz del canal")) %}
+  <a href="?tab={{ k }}" class="{{ 'on' if tab == k }}">{{ l }}</a>{% endfor %}
+</div>
+
+{% if tab == "auditoria" %}
+<div class="row mb-l" style="justify-content:space-between;align-items:center">
+  <div class="seg"><a href="?tab=auditoria" class="{{ 'on' if not red }}">Todo</a>{% for k, l in REDES.items() %}<a href="?tab=auditoria&red={{ k }}" class="{{ 'on' if red == k }}">{{ l }}</a>{% endfor %}</div>
+  <form method="post" action="/estudio/auditoria"><button class="btn" {{ 'disabled' if 'auditoria' in en_marcha }}>{{ 'Analizando…' if 'auditoria' in en_marcha else 'Sacar conclusiones con IA' }}</button></form>
+</div>
+{% set c = a.conclusiones %}
+{% if c %}
+<div class="grid g2 mb-l">
+  <div class="card"><div class="section-head"><h2>Lo que funciona</h2><span class="muted">{{ c.actualizado }}</span></div>
+    <ul class="est-list">{% for x in c.funciona or [] %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% if c.repetir %}<p class="meta mt">Repetiría con otro ángulo</p><ul class="est-list">{% for x in c.repetir %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}</div>
+  <div class="card"><div class="section-head"><h2>Lo que no</h2></div>
+    <ul class="est-list">{% for x in c.no_funciona or [] %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% if c.dejar %}<p class="meta mt">Dejaría de hacer</p><ul class="est-list">{% for x in c.dejar %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    {% if c.siguiente %}<p class="ask mt"><b>Siguiente apuesta:</b> {{ c.siguiente }}</p>{% endif %}</div>
+</div>
+{% endif %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Vídeo</th><th class="r">× tu media</th><th class="r">Vistas</th><th class="r">Compartidos / 1.000</th><th class="r">Guardados / 1.000</th><th>Fórmula del gancho</th></tr></thead>
+  <tbody>{% for p in a.videos %}
+  <tr class="est-{{ p.tercio }}"><td><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ (p.texto or '(sin texto)')[:80] }}</a><br><small class="muted">{{ REDES.get(p.red, p.red) }} · {{ p.fecha }}</small></td>
+    <td class="r num"><b>{% if p.multiplo %}x{{ p.multiplo }}{% else %}—{% endif %}</b></td><td class="r num">{{ p.vistas|miles }}</td>
+    <td class="r num">{{ p.comp_1k if p.comp_1k is not none else '—' }}</td><td class="r num">{{ p.guard_1k if p.guard_1k is not none else '—' }}</td>
+    <td>{% if p.formula %}<span class="badge">{{ p.formula }}</span>{% else %}<span class="muted">—</span>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="6" class="muted">Aún no hay vídeos tuyos con datos.</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="hint">Ordenado por cuánto supera cada vídeo tu propia mediana. Las vistas brutas engañan: compartidos y guardados son lo que más empuja el alcance.</p>
+
+{% elif tab == "comentarios" %}
+<div class="row mb-l" style="justify-content:space-between;align-items:center">
+  <div class="seg"><a href="?tab=comentarios&estado={{ estado }}" class="{{ 'on' if not cat }}">Todos</a>{% for k, l in CATEGORIAS.items() if k != 'ruido' %}<a href="?tab=comentarios&cat={{ k }}&estado={{ estado }}" class="{{ 'on' if cat == k }}">{{ l }}{% if conteo.get(k) %} · {{ conteo[k] }}{% endif %}</a>{% endfor %}</div>
+  <div class="row">
+    <div class="seg"><a href="?tab=comentarios&cat={{ cat }}&estado=pendiente" class="{{ 'on' if estado == 'pendiente' }}">Pendientes</a><a href="?tab=comentarios&cat={{ cat }}&estado=hecho" class="{{ 'on' if estado == 'hecho' }}">Respondidos</a></div>
+    <form method="post" action="/estudio/comentarios"><button class="btn" {{ 'disabled' if 'comentarios' in en_marcha }}>{{ 'Clasificando…' if 'comentarios' in en_marcha else 'Clasificar comentarios' + (' (' ~ sin_clasificar ~ ' nuevos)' if sin_clasificar else '') }}</button></form>
+  </div>
+</div>
+<p class="hint mb-l">Los comentarios de tus últimos vídeos se leen al actualizar los datos. La IA los ordena (primero posibles clientes y preguntas) y te deja un borrador para copiar. Los de una sola palabra («info», «link») se apartan.</p>
+{% for c in items %}
+<div class="card est-com mb-s">
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <div><span class="badge {{ 'accent' if c.categoria in ('cliente','pregunta') }}">{{ CATEGORIAS.get(c.categoria, c.categoria) }}</span> <b>@{{ c.autor }}</b> <small class="muted">{{ REDES.get(c.red, c.red) }} · {{ (c.creado or '')[:10] }}{% if c.motivo %} · {{ c.motivo }}{% endif %}</small></div>
+    <form class="inline" method="post" action="/comentarios/{{ c.id }}/estado"><input type="hidden" name="estado" value="{{ 'pendiente' if c.estado == 'hecho' else 'hecho' }}"><button class="btn ghost sm">{{ 'Volver a pendiente' if c.estado == 'hecho' else 'Respondido' }}</button></form>
+  </div>
+  <p class="est-txt">«{{ c.texto }}»</p>
+  {% if c.borrador %}<div class="est-borr"><span>{{ c.borrador }}</span><button type="button" class="btn ghost sm" data-copy="{{ c.borrador }}">Copiar</button></div>{% endif %}
+  {% if c.v_url %}<a class="hint" href="{{ c.v_url }}" target="_blank" rel="noopener noreferrer">Abrir el vídeo</a>{% endif %}
+</div>
+{% else %}<div class="empty">No hay comentarios aquí todavía.</div>{% endfor %}
+
+{% elif tab == "plan" %}
+<div class="row mb-l" style="justify-content:space-between;align-items:center">
+  <p class="muted" style="margin:0">Sale de tus ideas guardadas, las mejores de la semana y lo que dice la auditoría.{% if plan %} Creado {{ plan.creado }}.{% endif %}</p>
+  <form method="post" action="/estudio/plan"><button class="btn" {{ 'disabled' if 'plan' in en_marcha }}>{{ 'Preparando…' if 'plan' in en_marcha else ('Rehacer el plan' if plan else 'Preparar el plan de la semana') }}</button></form>
+</div>
+{% if plan %}
+{% if plan.foco %}<p class="ask mb-l"><b>Foco de la semana:</b> {{ plan.foco }}</p>{% endif %}
+<div class="grid g3">{% for d in plan.dias or [] %}
+  <div class="card est-dia {{ 'est-tarea' if d.tipo != 'video' }}">
+    <div class="section-head"><h2 style="text-transform:capitalize">{{ d.dia }}</h2><span class="muted">{{ d.hora or '' }}</span></div>
+    <p class="meta">{{ 'Vídeo' if d.tipo == 'video' else 'Tarea' }}{% if d.formato %} · {{ d.formato }}{% endif %}</p>
+    <h3>{{ d.titulo }}</h3>
+    {% if d.gancho %}<p>«{{ d.gancho }}»</p>{% endif %}
+    {% if d.palabra %}<p class="hint">Palabra clave: <b>{{ d.palabra }}</b></p>{% endif %}
+    {% if d.nota %}<p class="hint">{{ d.nota }}</p>{% endif %}
+    {% if d.idea_id %}<a class="hint" href="/ideas?estado=todas#idea-{{ d.idea_id }}">Ver la idea</a>{% endif %}
+  </div>{% endfor %}</div>
+{% else %}<div class="empty">Aún no hay plan. Guarda algunas ideas y pulsa «Preparar el plan de la semana».</div>{% endif %}
+
+{% elif tab == "voz" %}
+<div class="card">
+  <p class="muted">Cómo hablas en tus vídeos. La leen las ideas, los guiones y los borradores de respuesta para que suenen a ti.</p>
+  <form method="post" action="/estudio/voz">
+    <textarea name="voz" rows="14" placeholder="Quién eres, a quién hablas, tu tono, frases que usas, palabras que nunca dirías…">{{ voz }}</textarea>
+    <div class="row mt"><button class="btn">Guardar</button><button class="btn secondary" name="generar" value="1">Escribirla a partir de mis vídeos</button></div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

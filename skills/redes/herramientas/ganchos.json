@@ -1,0 +1,302 @@
+{
+  "version": "1.0",
+  "nota": "26 fórmulas de gancho para vídeo corto (Reels, TikTok, Shorts). Un vídeo tiene dos ganchos a la vez y no son la misma frase: lo primero que dices y lo primero que sale escrito en pantalla. El hablado tiene unos dos segundos; el escrito, uno, porque se lee antes de oírse. Cada fórmula trae plantilla, ejemplo, versión en pantalla, para qué sirve, cómo se estropea y una regex «match» para reconocerla en vídeos de otros. Las regex se aplican al texto en minúsculas y SIN tildes, en el orden de «orden_clasificacion» (las más concretas primero). Adaptado de instagram-agent-skill de Jake Schincariol (MIT).",
+  "reglas": [
+    "Escribe por separado la frase hablada y la de pantalla. La de pantalla es más corta y más directa: seis palabras o menos.",
+    "Sin presentación. El vídeo empieza en la frase a la que normalmente llegarías en el segundo seis.",
+    "Di el número. «Mucho» no es un número, y «un montón de tiempo» tampoco.",
+    "El primer fotograma también es un gancho. Una cara quieta en el segundo cero, sin movimiento ni texto, son tres ganchos tirados.",
+    "Si el gancho le valdría a cualquiera de tu sector, no es tu gancho. Mete lo que solo puedes decir tú.",
+    "Un gancho promete algo. Cúmplelo antes de la mitad o devuelves la retención que habías comprado."
+  ],
+  "ganchos": [
+    {
+      "id": 1,
+      "nombre": "Lo que me costó",
+      "plantilla": "{Cantidad concreta} es lo que me costó {un error}.",
+      "ejemplo": "18.000 euros es lo que me costó no poner una cláusula.",
+      "en_pantalla": "ERROR DE 18.000 €",
+      "para_que": "Confianza rápida. La gente termina los vídeos en los que el que queda mal eres tú.",
+      "trampa": "Un coste inventado. «Me costó la tranquilidad» no es una cifra y se nota.",
+      "match": "\\bme (?:costo|ha costado|salio por|cuesta)\\b|\\b(?:perdi|he perdido|tire|he tirado)\\b[^.!?]{0,30}\\d|\\d[\\d.,]*\\s*(?:€|euros?|pavos)\\s+(?:es|fue|son|fueron) lo que"
+    },
+    {
+      "id": 2,
+      "nombre": "Deja de",
+      "plantilla": "Deja de {hábito común}. Haz {alternativa}.",
+      "ejemplo": "Deja de publicar tres veces al día. Publica dos y contesta todos los comentarios durante una hora.",
+      "en_pantalla": "DEJA DE PUBLICAR A DIARIO",
+      "para_que": "Guardados y discusión. La orden llama la atención que una afirmación no consigue.",
+      "trampa": "Pedir que dejen algo que nadie hace. El hábito tiene que ser uno en el que el espectador se reconozca.",
+      "match": "^\\s*(?:deja de|dejad de|para de|no (?:hagas|publiques|uses|compres|pagues|digas|subas|mandes|pongas|cobres)|nunca (?:hagas|uses|digas|pagues|pongas))\\b|\\bdeja de \\w+"
+    },
+    {
+      "id": 3,
+      "nombre": "Nadie te cuenta",
+      "plantilla": "Nadie te cuenta que {verdad incómoda sobre lo que quieren}.",
+      "ejemplo": "Nadie te cuenta que tus primeros 30 vídeos tienen que fracasar.",
+      "en_pantalla": "TUS PRIMEROS 30 VAN A FALLAR",
+      "para_que": "Audiencias nuevas. Te coloca como el que dice lo que los demás callan.",
+      "trampa": "Contar una «verdad» que ya dice todo el mundo. Si los comentarios te dan la razón antes de acabar, no era secreto.",
+      "match": "\\b(?:nadie|ninguno)\\s+(?:nunca\\s+)?(?:te\\s+|os\\s+)?(?:cuenta|dice|explica|ensena|habla|menciona|conto|dijo)\\b|\\blo que nadie (?:te |os )?(?:cuenta|dice|explica)\\b|\\bno te lo (?:cuentan|dicen|explican)\\b"
+    },
+    {
+      "id": 4,
+      "nombre": "El sustituto",
+      "plantilla": "{Esto} ha sustituido a {algo caro} por {precio}.",
+      "ejemplo": "Esta herramienta de 12 euros ha sustituido al editor al que pagaba 2.000 al mes.",
+      "en_pantalla": "2.000 € -> 12 €",
+      "para_que": "Demos y herramientas. La diferencia de precio hace todo el trabajo.",
+      "trampa": "Exagerar el reemplazo. Si sustituye el 60 % del trabajo, di 60 %, o te lo dirán en comentarios.",
+      "match": "\\b(?:sustitu\\w+|reemplaz\\w+)\\b[^.!?]*\\d|\\d[^.!?]*\\b(?:sustitu\\w+|reemplaz\\w+)\\b|\\ben (?:vez|lugar) de (?:pagar|contratar)\\b"
+    },
+    {
+      "id": 5,
+      "nombre": "Tiempo comprimido",
+      "plantilla": "Esto me llevaba {mucho tiempo}. Ahora, {poco}.",
+      "ejemplo": "Los presupuestos me llevaban cinco horas. Ahora, veinte minutos.",
+      "en_pantalla": "5 HORAS -> 20 MIN",
+      "para_que": "Procesos donde lo que vende es la velocidad. Se entiende de un vistazo en pantalla.",
+      "trampa": "Una proporción que nadie se cree. De 40 horas a 4 segundos suena a mentira aunque sea verdad.",
+      "match": "\\bme (?:llevaba|costaba|tardaba|ocupaba)n?\\b|\\bahora (?:me )?(?:lleva|tardo|tarda|son|es)\\b[^.!?]{0,20}\\b(?:min|minutos|segundos|horas?)\\b|\\bde \\d+\\s*(?:horas?|minutos|dias)\\s+a\\s+\\d+|\\ben (?:\\d+|dos|tres|cinco|diez|veinte|treinta)\\s*(?:seg|segundos|min|minutos)\\b"
+    },
+    {
+      "id": 6,
+      "nombre": "Los números de verdad",
+      "plantilla": "He {hecho algo} durante {N días}. Estos son los números reales.",
+      "ejemplo": "He subido un vídeo al día durante 60 días. Esto es lo que ha pasado con mis mensajes.",
+      "en_pantalla": "60 DÍAS. NÚMEROS REALES.",
+      "para_que": "Experimentos. Va con la grabación de pantalla del panel de verdad, que es todo el valor.",
+      "trampa": "No enseñar la pantalla. Un vídeo de números sin captura es solo una afirmación.",
+      "match": "\\b(?:he|estuve|llevo|probe|hice)\\b[^.!?]{0,40}\\b(?:durante\\s+)?\\d+\\s+(?:dias|semanas|meses|anos)\\b|\\b(?:estos|aqui) (?:son|tienes|van) (?:los|mis) (?:numeros|datos|resultados)\\b"
+    },
+    {
+      "id": 7,
+      "nombre": "Lo haces mal (y no es culpa tuya)",
+      "plantilla": "Estás haciendo {algo} mal, y no es culpa tuya. {El arreglo}.",
+      "ejemplo": "Estás escribiendo mal los textos de tus posts, y no es culpa tuya. Instagram corta todo a partir de la primera línea.",
+      "en_pantalla": "TU TEXTO SE CORTA",
+      "para_que": "Enseñar. La parte de «no es culpa tuya» evita que suene a insulto, que es lo que mata este gancho.",
+      "trampa": "Quitar el perdón. «Lo haces mal» a secas hace que la gente se vaya en vez de aprender.",
+      "match": "\\b(?:el )?(?:error|fallo) (?:mas )?(?:comun|tipico|gordo|grande|que)\\b|\\blo (?:estas|estais) haciendo mal\\b|\\b(?:estas|estais) \\w+ mal\\b|\\blo haces mal\\b"
+    },
+    {
+      "id": 8,
+      "nombre": "Desde dentro",
+      "plantilla": "Llevo {N años} {dentro de algo}. Esto es lo que nunca decimos en voz alta.",
+      "ejemplo": "Llevo seis años vendiendo webs a empresas. Esto es lo que nunca ponemos en el presupuesto.",
+      "en_pantalla": "6 AÑOS DENTRO",
+      "para_que": "Autoridad sin enseñar títulos. Solo funciona si los años son reales.",
+      "trampa": "Prometer un secreto y entregar el folleto. Los comentarios no perdonan este.",
+      "match": "\\b(?:llevo|estuve|trabaje|he trabajado|fui)\\b[^.!?]*\\b(?:\\d+|dos|tres|cuatro|cinco|seis|siete|ocho|diez|quince|veinte)\\s*\\+?\\s*anos\\b|\\b(?:nunca|jamas) (?:decimos|contamos|ponemos|ensenamos)\\b"
+    },
+    {
+      "id": 9,
+      "nombre": "Cópialo",
+      "plantilla": "Copia esta {plantilla}. Me costó {tiempo} dejarla así.",
+      "ejemplo": "Copia este mensaje de seguimiento de cuatro líneas. Me costó dos años y muchos clientes perdidos.",
+      "en_pantalla": "CÓPIALO",
+      "para_que": "Guardados y envíos, las dos métricas que más mueven el alcance.",
+      "trampa": "Que la plantilla no salga en pantalla. Si no se puede hacer captura, no hay nada que copiar.",
+      "match": "^\\s*(?:copia|copiate|robame|roba|quedate con|guardate)\\b|\\b(?:copia|roba|guarda) (?:esta|este|estos|estas|mi|mis)\\b|^\\s*(?:aqui tienes|esta es|este es) (?:la|el|mi) (?:plantilla|lista|formula|prompt|mensaje) exact[oa]\\b"
+    },
+    {
+      "id": 10,
+      "nombre": "Si te pasa esto",
+      "plantilla": "Si {situación concreta}, estos {segundos} lo arreglan.",
+      "ejemplo": "Si tus vídeos tienen visitas pero no seguidores, los próximos 40 segundos lo arreglan.",
+      "en_pantalla": "¿VISITAS PERO NO SEGUIDORES?",
+      "para_que": "Filtrar fuerte. Se queda menos gente, y los que se quedan son los que compran.",
+      "trampa": "Una situación tan amplia que no filtra a nadie. «Si quieres crecer» no es una situación.",
+      "match": "^\\s*(?:¿\\s*)?si (?:tu|tus|te|tienes|eres|haces|usas|vendes|quieres|trabajas|cobras|publicas|llevas)\\b"
+    },
+    {
+      "id": 11,
+      "nombre": "Lista con favorito",
+      "plantilla": "{N} {cosas} que {resultado}. La número {k} es la que nadie usa.",
+      "ejemplo": "Cinco cambios en el texto que duplican los guardados. El cuarto es el que nadie hace.",
+      "en_pantalla": "5 CAMBIOS. EL 4º ES EL BUENO.",
+      "para_que": "Retención en el medio: tener un favorito da una razón para quedarse pasado el tercero.",
+      "trampa": "Más de siete. Nadie se cree que tengas nueve buenos, y no los tienes.",
+      "match": "^\\s*(?:\\d+|tres|cuatro|cinco|seis|siete|diez)\\s+(?:cosas|trucos|herramientas|errores|formas|maneras|apps|ideas|pasos|claves|prompts|webs|consejos)\\b|\\bla (?:numero )?\\d+ es\\b|\\b(?:el|la) (?:ultim[oa]|tercer[oa]?|cuart[oa]|quint[oa]) es (?:el|la)\\b"
+    },
+    {
+      "id": 12,
+      "nombre": "La objeción",
+      "plantilla": "«{Objeción tal cual te la dicen}». Vale. Esta es la versión que funciona igual.",
+      "ejemplo": "«No quiero salir en cámara». Vale. Esta es la versión sin cara que también vende.",
+      "en_pantalla": "«NO QUIERO SALIR EN CÁMARA»",
+      "para_que": "Vender a los que ya dijeron que no una vez.",
+      "trampa": "Inventarte la objeción. Cópiala literal de un mensaje o un comentario, con faltas incluidas.",
+      "match": "^\\s*[\\\"«'“][^\\\"»'”]{5,120}[\\\"»'”][,.]?\\s*(?:vale|bien|ok|perfecto|pues|aqui|tranquil[oa]|normal)"
+    },
+    {
+      "id": 13,
+      "nombre": "Antes y después",
+      "plantilla": "{Así era antes}. {Así es ahora}. {Una frase sobre lo que cambió}.",
+      "ejemplo": "Así era mi perfil en marzo. Así está ahora. Solo cambié el nombre.",
+      "en_pantalla": "MARZO / AHORA",
+      "para_que": "Cualquier cosa visual. El corte entre los dos planos es el gancho; las palabras son secundarias.",
+      "trampa": "Tres palancas. Di una sola cosa que cambió o la transformación deja de ser creíble.",
+      "match": "\\b(?:asi|esto|este|esta) (?:era|estaba|eran)\\b[^.!?]*[.!?]\\s*(?:asi|esto|este|esta) (?:es|esta|son)\\b|\\bantes\\b[^.!?]*\\b(?:ahora|despues)\\b"
+    },
+    {
+      "id": 14,
+      "nombre": "Llamada a un grupo",
+      "plantilla": "{Grupo concreto}: esto es lo que llevas tiempo evitando.",
+      "ejemplo": "Fotógrafos que cobráis menos de 2.000 euros: esta es la página de precios que lleváis tiempo evitando.",
+      "en_pantalla": "FOTÓGRAFOS DE MENOS DE 2.000 €",
+      "para_que": "Recortar una audiencia amplia hasta la que convierte. Suben los envíos porque la gente se etiqueta.",
+      "trampa": "Un grupo tan grande que no es una llamada. «Emprendedores» no es un grupo.",
+      "match": "^(?:[^:.!?]|\\d[.,]\\d){3,90}:\\s*(?:esto|este|esta|estos|lo que|aqui)\\b"
+    },
+    {
+      "id": 15,
+      "nombre": "El historial de fracasos",
+      "plantilla": "Mis primeros {N} {intentos} no hicieron nada. Esto cambió en el {N+1}.",
+      "ejemplo": "Mis primeros 47 vídeos se quedaron en 300 visitas. El 48 hizo 400.000. Solo cambió una cosa.",
+      "en_pantalla": "47 FRACASOS Y LUEGO ESTO",
+      "para_que": "Gente que empieza, que es casi toda la audiencia. Muchos comentarios.",
+      "trampa": "Que el cambio suene a suerte. Si la respuesta es «tuve suerte», no hay vídeo.",
+      "match": "\\bmis primer(?:os|as) (?:\\d+|dos|tres|cinco|diez|veinte|cincuenta|cien)\\b|\\b(?:\\d+|diez|veinte|cincuenta) (?:videos|reels|intentos|clientes|posts) (?:sin|que no)\\b|\\bel (?:numero )?\\d+ (?:hizo|fue|tuvo|llego)\\b"
+    },
+    {
+      "id": 16,
+      "nombre": "La pregunta literal",
+      "plantilla": "«{Pregunta tal cual te la hacen}». Me la hacéis cada semana.",
+      "ejemplo": "«¿Cómo publico con constancia sin acabar harto?». Me lo preguntáis cada semana.",
+      "en_pantalla": "ME LO PREGUNTÁIS CADA SEMANA",
+      "para_que": "Búsquedas. Una pregunta escrita como la escribe la gente es justo lo que busca el buscador de la app.",
+      "trampa": "Pulir la pregunta. El valor está en que son sus palabras, con faltas y todo.",
+      "match": "\\?[\\\"»”']?[.,]?\\s*(?:me (?:lo |la )?(?:preguntais|preguntan|preguntas|haceis|escribis|escriben|repetis)|cada semana|todos los dias|no paran de)"
+    },
+    {
+      "id": 17,
+      "nombre": "Cara a cara",
+      "plantilla": "{A} contra {B}. Probé los dos {tiempo} y no hubo color.",
+      "ejemplo": "Carruseles contra vídeos. Probé los dos 90 días y no hubo color.",
+      "en_pantalla": "CARRUSELES VS VÍDEOS",
+      "para_que": "Comentarios. La gente llega ya con una opinión, que es justo lo que buscas.",
+      "trampa": "No elegir. Una comparación que acaba en «depende» es un vídeo sin final.",
+      "match": "\\b\\w+\\s+(?:vs\\.?|versus|contra)\\s+\\w+|\\b(?:probe|he probado|use|compare) (?:los|las|ambos|ambas) (?:dos|tres|\\d)\\b|\\bcual es mejor\\b"
+    },
+    {
+      "id": 18,
+      "nombre": "Arranque en frío",
+      "plantilla": "{Empieza ya haciendo la cosa}. Mira lo que pasa.",
+      "ejemplo": "Mira lo que pasa cuando pego el texto de un competidor aquí.",
+      "en_pantalla": "MIRA ESTO",
+      "para_que": "Grabaciones de pantalla y cualquier cosa con un resultado visible. Sin presentación: la mano ya está haciéndolo.",
+      "trampa": "Un resultado que tarda doce segundos en llegar. Si el resultado es lento, corta y enséñalo antes.",
+      "match": "^\\s*(?:mira|fijate|ojo a|atento a)\\s+(?:lo que|esto|como|que|este|esta)\\b|\\bmira lo que pasa\\b"
+    },
+    {
+      "id": 19,
+      "nombre": "La fecha límite",
+      "plantilla": "{Algo} cambia el {fecha}. Haz {acción} antes.",
+      "ejemplo": "Instagram cambia cómo recorta las portadas a partir del lunes. Arréglalas antes.",
+      "en_pantalla": "ANTES DE PUBLICAR OTRA VEZ",
+      "para_que": "Urgencia real: cambios de la plataforma, temporadas, normas nuevas.",
+      "trampa": "Urgencia fabricada. Una fecha falsa y todas las siguientes valen menos.",
+      "match": "\\bantes de que\\b|\\b(?:a partir del?|desde el) (?:\\d+|lunes|martes|miercoles|jueves|viernes|sabado|domingo|proximo)\\b|\\bcambia (?:el|en|a partir)\\b|\\bantes del? (?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|\\d+)\\b"
+    },
+    {
+      "id": 20,
+      "nombre": "Permiso",
+      "plantilla": "No necesitas {lo que todo el mundo dice que necesitas}.",
+      "ejemplo": "No necesitas un nicho. Necesitas una persona a la que puedas poner nombre.",
+      "en_pantalla": "NO NECESITAS UN NICHO",
+      "para_que": "Alivio. Muchos guardados, porque quita un bloqueo en vez de añadir una tarea.",
+      "trampa": "Quitar el bloqueo y no poner nada en su sitio. La segunda mitad es todo el vídeo.",
+      "match": "^\\s*no (?:necesitas|hace falta|tienes que|te hace falta|os hace falta|necesitais)\\b"
+    },
+    {
+      "id": 21,
+      "nombre": "A mitad de frase",
+      "plantilla": "…y ahí fue cuando {el giro}.",
+      "ejemplo": "…y ahí fue cuando el cliente pidió que le devolviera el dinero. Tres días después de aprobarlo.",
+      "en_pantalla": "ME PIDIÓ EL DINERO",
+      "para_que": "Historias. Empezar a mitad de escena hace que el espectador sienta que ha llegado tarde, y eso engancha.",
+      "trampa": "No volver nunca a rellenar el hueco. Cuenta el contexto antes del segundo ocho o parece un error.",
+      "match": "^\\s*(?:\\.\\.\\.|…)|^\\s*y (?:ahi|entonces|justo|de repente)\\b|\\by ahi fue cuando\\b"
+    },
+    {
+      "id": 22,
+      "nombre": "El refrán al revés",
+      "plantilla": "{Refrán conocido, dado la vuelta}.",
+      "ejemplo": "A quien madruga, nadie le ayuda.",
+      "en_pantalla": "A QUIEN MADRUGA, NADIE LE AYUDA",
+      "para_que": "Comentarios. El espectador tiene que pararse a comprobar si lo ha oído bien.",
+      "trampa": "Dar la vuelta a un refrán que nadie dice. El original tiene que ser un acto reflejo, o la vuelta es solo una frase.",
+      "match": "\\ba quien madruga\\b|\\bno por mucho\\b|\\bmas vale\\b|\\bel que (?:la sigue|algo quiere|mucho abarca)\\b|\\bquien (?:mucho abarca|algo quiere|la sigue)\\b|\\bno hay mal que\\b|\\bdime con quien\\b"
+    },
+    {
+      "id": 23,
+      "nombre": "El dato",
+      "plantilla": "El {N} % de {grupo} {dato sorprendente}.",
+      "ejemplo": "El 33 % de los que acaban el instituto no vuelve a leer un libro.",
+      "en_pantalla": "EL 33 % NO VUELVE A LEER",
+      "para_que": "Envíos. Un número que se puede repetir en una cena se le manda a alguien.",
+      "trampa": "Un dato sin fuente. Di de dónde sale en el vídeo o no lo uses.",
+      "match": "\\b\\d+[.,]?\\d*\\s*(?:%|por ciento)|\\b(?:uno|una|dos|tres|nueve) de cada (?:\\d+|diez|cien|cinco)\\b|\\b(?:la mitad|un tercio|tres cuartas partes) de\\b"
+    },
+    {
+      "id": 24,
+      "nombre": "La presentación",
+      "plantilla": "Este es el nuevo {objeto}.",
+      "ejemplo": "Esta es la nueva cámara compacta de Sony, y arregla lo único que odiaba.",
+      "en_pantalla": "LA NUEVA",
+      "para_que": "Cualquier cosa física o visual. El objeto es el gancho y las palabras son subtítulos.",
+      "trampa": "Enseñar el objeto sin decir qué cambia. Una presentación sin nada en juego es un anuncio.",
+      "match": "^\\s*(?:este|esta|estos|estas) (?:es|son) (?:el|la|los|las) nuev[oa]s?\\b|\\bacaba(?:n)? de (?:salir|sacar|lanzar)\\b|\\bhan sacado\\b"
+    },
+    {
+      "id": 25,
+      "nombre": "El resultado de otro",
+      "plantilla": "Hay un {persona} que {resultado} en {tiempo}.",
+      "ejemplo": "Hay un creador que consiguió un millón de suscriptores en un solo mes.",
+      "en_pantalla": "1 MILLÓN EN UN MES",
+      "para_que": "Prueba cuando todavía no tienes tu propio número. Vale en tercera persona si es verificable.",
+      "trampa": "Sin nombre ni enlace. Un milagro anónimo es un rumor.",
+      "match": "^\\s*(?:hay|hubo|conozco a|tengo un cliente que) (?:un|una)?\\s*\\w*[^.!?]*\\b(?:que|y)\\b[^.!?]*(?:\\d|millon|mil)|\\bun (?:chaval|tio|creador|autonomo|cliente|amigo) (?:que|ha)\\b"
+    },
+    {
+      "id": 26,
+      "nombre": "El superlativo",
+      "plantilla": "La forma más {rápida} de {conseguir algo} es {la respuesta}.",
+      "ejemplo": "La forma más rápida de coger confianza es acumular pruebas que no puedas discutir.",
+      "en_pantalla": "LA FORMA MÁS RÁPIDA",
+      "para_que": "Vídeos de una sola idea sin historia. Es la forma más común en redes y la más fácil de hacer mal.",
+      "trampa": "Un superlativo con una respuesta blanda. Si la segunda mitad es «la constancia», no has dicho nada.",
+      "match": "\\b(?:la|el|lo) (?:forma|manera|truco|herramienta|app|mejor|peor|unico|unica)\\s+(?:mas\\s+)?(?:rapid\\w+|facil|barat\\w+|sencill\\w+|util|potente|que)\\b|\\bla (?:forma|manera) mas \\w+"
+    }
+  ],
+  "orden_clasificacion": [
+    9,
+    1,
+    23,
+    5,
+    4,
+    3,
+    15,
+    20,
+    7,
+    18,
+    24,
+    25,
+    17,
+    8,
+    6,
+    16,
+    12,
+    10,
+    2,
+    13,
+    19,
+    21,
+    22,
+    11,
+    14,
+    26
+  ]
+}

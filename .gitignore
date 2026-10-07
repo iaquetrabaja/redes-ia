@@ -1,0 +1,15 @@
+# Tus datos y claves: nunca a git
+datos/
+*.db
+*.db-wal
+*.db-shm
+.llave
+# Entorno de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Sistema
+.DS_Store
+Thumbs.db

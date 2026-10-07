@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bienvenida · Redes IA</title>
+<link rel="stylesheet" href="/static/css/app.css?v={{ version }}">
+<script src="/static/js/theme.js"></script>
+</head>
+<body>
+{% if ok %}<div class="flash ok">{{ ok }}</div>{% endif %}
+{% if err %}<div class="flash err">{{ err }}</div>{% endif %}
+<div class="wizard">
+  <h1>Bienvenido a Redes IA</h1>
+  <p class="lead">Tu panel de contenido para TikTok e Instagram, en tu ordenador. Dos pasos y listo.</p>
+  <div class="pasos"><span class="{{ 'on' if paso == 1 }}">1. Conectar una IA</span><span>→</span><span class="{{ 'on' if paso == 2 }}">2. Tus cuentas</span></div>
+
+  {% if paso == 1 %}
+  <form method="post" action="/bienvenida/ia" class="card">
+    <div class="opciones">
+      {% for k, p in proveedores.items() %}
+      <label class="opcion"><input type="radio" name="proveedor" value="{{ k }}" {{ 'checked' if (actual or 'gemini') == k }}>
+        <span><b>{{ p.nombre }}</b>{% if k == 'gemini' %} <span class="badge ok">recomendado · gratis</span>{% elif p.gratis %} <span class="badge ok">gratis</span>{% endif %}
+        <small>{% if k == 'gemini' %}Crea una clave gratis en 1 minuto: <a href="{{ p.donde }}" target="_blank" rel="noopener">aistudio.google.com/apikey</a> → «Create API key».{% elif k == 'ollama' %}Sin clave: instala Ollama y descarga un modelo (ordenador potente).{% else %}Clave en <a href="{{ p.donde }}" target="_blank" rel="noopener">{{ p.donde }}</a>. De pago por uso.{% endif %}</small></span></label>
+      {% endfor %}
+    </div>
+    <div class="field"><label>Pega aquí tu clave (API key)</label><input type="password" name="clave" autocomplete="off" placeholder="AIza…"></div>
+    <div class="field"><label>Dirección de Ollama (solo si usas Ollama)</label><input type="text" name="ollama_url" value="http://127.0.0.1:11434"></div>
+    <button class="btn">Conectar y probar</button>
+    <p class="hint mt">La clave se guarda solo en tu ordenador (carpeta datos/).</p>
+  </form>
+  <p class="mt"><a href="/?saltar=1" class="hint">Prefiero verlo primero: abre la app con <code>--demo</code> para ver datos de ejemplo.</a></p>
+  {% else %}
+  <form method="post" action="/bienvenida/cuentas" class="card">
+    <div class="field"><label>Tu usuario de TikTok</label><input type="text" name="tiktok" placeholder="@tu_usuario"></div>
+    <div class="field"><label>Cuentas de tu competencia o referentes en TikTok (separadas por comas)</label><textarea name="competencia" rows="3" placeholder="@referente1, @referente2, @referente3"></textarea>
+      <p class="hint">De 3 a 10 cuentas de tu nicho. De ellas salen las ideas: sus vídeos que superan su propia media.</p></div>
+    <div class="field"><label>¿De qué va tu canal y para quién? (una o dos frases)</label><textarea name="contexto" rows="2" placeholder="Enseño IA práctica a autónomos y pequeños negocios…"></textarea></div>
+    <button class="btn">Empezar</button>
+    <p class="hint mt">Instagram (con la API oficial) y YouTube los conectas después en Ajustes → Redes.</p>
+  </form>
+  {% endif %}
+</div>
+<script src="/static/js/app.js?v={{ version }}"></script>
+</body>
+</html>

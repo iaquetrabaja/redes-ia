@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Redes IA{% endblock %} · Redes IA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141414'/%3E%3Cpath d='M9 22V10h7a4 4 0 0 1 0 8h-7m7 0 5 4' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/css/app.css?v={{ version }}">
+<script src="/static/js/theme.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="/">Redes IA<span>tu panel de contenido</span></a>
+    <nav class="nav">
+      {% set items = [("/", "Resumen"), ("/ideas", "Ideas"), ("/automatizaciones", "Automatizaciones"), ("/estudio", "Estudio"), ("/herramientas", "Herramientas"), ("/ajustes", "Ajustes")] %}
+      {% for href, label in items %}
+      <a href="{{ href }}" class="{{ 'on' if (ruta == href or (href != '/' and ruta.startswith(href))) }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <div class="side-foot">
+      {% if en_marcha %}<span class="tarea-viva" data-en-marcha><i></i>Trabajando: {{ en_marcha|join(', ') }}</span>{% endif %}
+      {% if proveedor %}<small class="muted">IA: {{ proveedor }}</small>{% else %}<a class="btn sm secondary" href="/ajustes?tab=ia">Conectar IA</a>{% endif %}
+      <button class="btn ghost sm" type="button" data-theme-toggle>Cambiar tema</button>
+    </div>
+  </aside>
+  <main class="main">
+    {% if ok %}<div class="flash ok">{{ ok }}</div>{% endif %}
+    {% if err %}<div class="flash err">{{ err }}</div>{% endif %}
+    {% if demo %}<div class="demo-bar"><b>Modo demostración.</b> Los datos son de ejemplo (cuentas «…_demo»). Para usar tus datos, cierra y arranca sin <code>--demo</code>.</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="/static/js/app.js?v={{ version }}"></script>
+</body>
+</html>

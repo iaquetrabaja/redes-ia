@@ -1,0 +1,32 @@
+{
+  "name": "redes",
+  "description": "Una skill para llevar TikTok e Instagram en español: guiones de vídeo corto con el gancho puntuado y la hoja de ritmo, lo que funciona en tu nicho ordenado por múltiplo, el texto del post revisado, carruseles, historias, perfil sobre 100, plan semanal, comentarios, respuestas, mensajes con palabra clave, reutilizar contenido, auditoría y un humanizador que quita el tufo a IA antes de publicar.",
+  "version": "1.0.0",
+  "author": {
+    "name": "David García",
+    "url": "https://iaquetrabaja.com"
+  },
+  "homepage": "https://github.com/iaquetrabaja/redes-ia",
+  "repository": "https://github.com/iaquetrabaja/redes-ia",
+  "license": "MIT",
+  "keywords": [
+    "tiktok",
+    "instagram",
+    "reels",
+    "español",
+    "contenido",
+    "humanizar",
+    "redes sociales"
+  ],
+  "skills": [
+    "./skills/redes"
+  ],
+  "mcpServers": {
+    "redes-ia": {
+      "command": "python",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp_redes.py"
+      ]
+    }
+  }
+}

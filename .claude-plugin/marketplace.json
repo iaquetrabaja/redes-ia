@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "redes-ia",
+  "description": "La skill de redes en español para Claude",
+  "owner": {
+    "name": "David García",
+    "url": "https://iaquetrabaja.com"
+  },
+  "plugins": [
+    {
+      "name": "redes",
+      "description": "Skill de redes en español (13 modos) y servidor MCP de Redes IA: ganchos puntuados, ritmo, revisor de textos, humanizador y tus datos del panel local.",
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/iaquetrabaja/redes-ia"
+    }
+  ]
+}

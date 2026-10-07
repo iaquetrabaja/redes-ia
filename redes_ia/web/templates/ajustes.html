@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Ajustes{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Ajustes</h1><p>Todo se guarda en tu ordenador, en la carpeta <code>datos/</code>.</p></div></div>
+<div class="tabs">
+  {% for k, l in (("ia","IA"),("redes","Redes y competencia"),("general","General"),("claude","Claude y Cursor")) %}
+  <a href="?tab={{ k }}" class="{{ 'on' if tab == k }}">{{ l }}</a>{% endfor %}
+</div>
+
+{% if tab == "ia" %}
+<form method="post" action="/ajustes/ia" class="card">
+  <h2 class="mb">Proveedor de IA</h2>
+  <div class="opciones">
+    {% for k, p in proveedores.items() %}
+    <label class="opcion"><input type="radio" name="proveedor" value="{{ k }}" {{ 'checked' if actual == k or (not actual and k == 'gemini') }}>
+      <span><b>{{ p.nombre }}</b>{% if p.gratis %} <span class="badge ok">gratis</span>{% endif %}{% if claves[k] %} <span class="badge">clave guardada {{ claves[k] }}</span>{% endif %}
+      <small>{% if k == 'ollama' %}Sin clave: la IA corre en tu ordenador (necesita un ordenador potente). {% endif %}Consíguela en <a href="{{ p.donde }}" target="_blank" rel="noopener">{{ p.donde }}</a></small></span></label>
+    {% endfor %}
+  </div>
+  <div class="field"><label>Clave (API key) del proveedor elegido</label><input type="password" name="clave" placeholder="Pégala aquí. Déjala vacía para mantener la guardada" autocomplete="off"></div>
+  <div class="row"><div class="field"><label>Modelo</label><input type="text" name="modelo" value="{{ modelo }}" list="lista-modelos" data-modelos><datalist id="lista-modelos"></datalist><p class="hint">Vacío = el recomendado. Con Gemini gratis, uno «flash».</p></div>
+    <div class="field w-0"><button type="button" class="btn secondary" data-cargar-modelos>Ver modelos disponibles</button></div></div>
+  <div class="field"><label>Dirección de Ollama (solo si usas Ollama)</label><input type="text" name="ollama_url" value="{{ cfg('ollama_url') }}"></div>
+  <div class="row"><button class="btn">Guardar</button><button class="btn secondary" name="probar" value="1">Guardar y probar conexión</button></div>
+</form>
+<p class="hint mt">Qué se envía a la IA: el texto de tus vídeos y los de tu competencia, tus comentarios y tu «voz», para generar ideas y guiones. Nada más. Tus claves no salen de tu ordenador salvo hacia el propio proveedor.</p>
+
+{% elif tab == "redes" %}
+<div class="grid g2 mb-l">
+  <form method="post" action="/ajustes/cuenta" class="card">
+    <h2 class="mb">Añadir cuenta</h2>
+    <div class="row"><div class="field w-s"><label>Red</label><select name="red"><option value="tiktok">TikTok</option><option value="youtube">YouTube Shorts</option><option value="instagram">Instagram (competencia)</option></select></div>
+      <div class="field"><label>Usuario o enlace</label><input type="text" name="usuario" placeholder="@usuario" required></div></div>
+    <div class="field"><label class="check"><input type="checkbox" name="mia" value="1"> Es mi cuenta</label></div>
+    <button class="btn">Añadir</button>
+    <p class="hint mt">TikTok y YouTube se leen sin contraseñas, solo lo público: los ~10 últimos vídeos de cada cuenta con sus vistas. Tus vídeos, además, con me gusta, compartidos, guardados y comentarios.</p>
+  </form>
+  <form method="post" action="/ajustes/instagram" class="card">
+    <h2 class="mb">Conectar tu Instagram</h2>
+    <p class="muted">Con la API oficial: cuenta profesional y un token de «API de Instagram con inicio de sesión de Instagram». Paso a paso en la guía (docs/GUIA.md, apartado «Conectar Instagram»).</p>
+    <div class="field"><label>Token de acceso de Instagram {% if ig %}<span class="badge ok">guardado {{ ig }}</span>{% endif %}</label><input type="password" name="token" autocomplete="off"></div>
+    <details class="mb"><summary>Opcional: competencia de Instagram con Business Discovery</summary>
+      <div class="field mt"><label>Token de Facebook (página vinculada) {% if fb %}<span class="badge ok">{{ fb }}</span>{% endif %}</label><input type="password" name="fb_token" autocomplete="off"></div>
+      <div class="field"><label>Id de tu cuenta de Instagram profesional</label><input type="text" name="fb_ig_id" value="{{ fb_ig_id }}"></div></details>
+    <button class="btn">Guardar</button>
+  </form>
+</div>
+<div class="section-head"><h2>Tus cuentas y la competencia</h2><form method="post" action="/actualizar"><button class="btn secondary sm">Actualizar todo ahora</button></form></div>
+<div class="table-wrap mb-l"><table class="table">
+  <thead><tr><th>Cuenta</th><th>Red</th><th>Tipo</th><th class="r">Seguidores</th><th>Última lectura</th><th></th></tr></thead>
+  <tbody>{% for c in cuentas %}<tr><td><b>@{{ c.usuario }}</b>{% if c.demo %} <span class="badge">demo</span>{% endif %}{% if c.error %}<br><small class="chk FAIL">{{ c.error[:140] }}</small>{% endif %}</td><td>{{ REDES.get(c.red, c.red) }}</td><td>{{ 'Mía' if c.mia else 'Competencia' }}</td><td class="r num">{{ c.seguidores|miles }}</td><td><small class="muted">{{ c.ultimo or '—' }}</small></td>
+    <td class="r"><form class="inline" method="post" action="/ajustes/cuenta/{{ c.id }}/borrar" onsubmit="return confirm('¿Quitar @{{ c.usuario }} y sus datos?')"><button class="btn danger sm">Quitar</button></form></td></tr>
+  {% else %}<tr><td colspan="6" class="muted">Ninguna todavía.</td></tr>{% endfor %}</tbody>
+</table></div>
+<form method="post" action="/ajustes/csv" enctype="multipart/form-data" class="card">
+  <h2 class="mb">Competencia de Instagram a mano (CSV)</h2>
+  <p class="muted">Instagram no deja leer cuentas ajenas con tu token. Si quieres comparar, pega sus vídeos: columnas <code>cuenta,url,texto,vistas,likes,fecha</code> (vale coma o punto y coma; «12k» o «1,2M» también).</p>
+  <textarea name="csv" rows="4" placeholder="cuenta;url;texto;vistas;likes;fecha&#10;otra_cuenta;https://www.instagram.com/reel/XXXX/;Nadie te cuenta…;120k;8400;2026-10-01"></textarea>
+  <div class="row mt"><input type="file" name="archivo" accept=".csv,.txt"><button class="btn">Importar</button></div>
+</form>
+
+{% elif tab == "general" %}
+<form method="post" action="/ajustes/general" class="card">
+  <div class="field"><label>De qué va tu canal y para quién (lo lee la IA en todo)</label><textarea name="contexto" rows="3">{{ cfg('contexto') }}</textarea></div>
+  <div class="field"><label>Temas para buscar tendencias (separados por comas)</label><input type="text" name="temas" value="{{ cfg('temas') }}" placeholder="IA, LLM, agentes, automatización, ChatGPT…"></div>
+  <div class="field"><label>Subreddits (separados por comas)</label><input type="text" name="subreddits" value="{{ cfg('subreddits') }}" placeholder="artificial, ChatGPT, LocalLLaMA"></div>
+  <div class="row"><div class="field w-s"><label>Hora de la tarea diaria</label><input type="number" name="hora_diaria" min="0" max="23" value="{{ cfg('hora_diaria') }}"></div>
+    <div class="field w-s"><label>Periodo del resumen por defecto</label><select name="dias_resumen">{% for d in ('3','7','30','90') %}<option value="{{ d }}" {{ 'selected' if cfg('dias_resumen') == d }}>{{ d }} días</option>{% endfor %}</select></div></div>
+  <p class="hint">Cada día a esa hora (si la app está abierta; si no, al abrirla): lee tus cuentas y la competencia, busca ideas y clasifica comentarios. Los lunes, además, propone automatizaciones.</p>
+  <button class="btn">Guardar</button>
+</form>
+<div class="section"><h2>Historial de tareas</h2>
+{% for t in tareas_lista %}<p class="mb-s"><span class="chk {{ 'PASS' if t.estado == 'ok' else ('FAIL' if t.estado == 'error' else 'WARN') }}">{{ t.estado }}</span> <b>{{ t.tipo }}</b> <small class="muted">{{ t.inicio }} · {{ (t.detalle or '')[:200] }}</small></p>{% else %}<p class="muted">Nada todavía.</p>{% endfor %}</div>
+
+{% elif tab == "claude" %}
+<div class="card mb-l">
+  <h2 class="mb">Usar Redes IA desde Claude, Cursor y similares</h2>
+  <p>El servidor MCP da a tu asistente las herramientas (puntuar ganchos, ritmo, revisar el texto, humanizar, ranking viral) y acceso a tus datos de aquí (ideas, auditoría, comentarios, voz y plan). Copia la configuración tal cual: ya lleva las rutas de tu ordenador.</p>
+  <p class="meta">Claude Desktop → Ajustes → Desarrollador → Editar configuración (claude_desktop_config.json):</p>
+  <div class="copiable"><pre id="cfg-mcp">{{ mcp_json }}</pre><button type="button" class="btn sm secondary" data-copy-from="#cfg-mcp">Copiar</button></div>
+  <p class="meta mt">Cursor → crea <code>.cursor/mcp.json</code> en tu proyecto (o en tu carpeta de usuario) con lo mismo.</p>
+  <p class="meta mt">Claude Code (terminal):</p>
+  <div class="copiable"><pre id="cfg-cc">claude mcp add redes-ia -- "{{ py }}" "{{ raiz }}/mcp_redes.py"</pre><button type="button" class="btn sm secondary" data-copy-from="#cfg-cc">Copiar</button></div>
+</div>
+<div class="card">
+  <h2 class="mb">La skill de redes para Claude</h2>
+  <p>Trece modos en español (guion, viral, texto del post, carrusel, historias, perfil, plan, humanizar, comentar, responder, mensajes, reutilizar y auditoría). Cópiala a tu carpeta de skills:</p>
+  <div class="copiable"><pre id="cfg-skill">Windows:  xcopy /E /I "{{ raiz }}/skills/redes" "%USERPROFILE%/.claude/skills/redes"
+Mac/Linux: cp -r "{{ raiz }}/skills/redes" ~/.claude/skills/redes</pre><button type="button" class="btn sm secondary" data-copy-from="#cfg-skill">Copiar</button></div>
+  <p class="hint mt">Sin Claude Code: pega el contenido de <code>skills/redes/SKILL.md</code> al principio de una conversación y funciona como modo (sin las herramientas de Python).</p>
+</div>
+{% endif %}
+{% endblock %}

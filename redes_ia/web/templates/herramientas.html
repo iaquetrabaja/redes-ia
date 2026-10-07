@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Herramientas{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Herramientas</h1><p>Las cinco herramientas de la skill de redes. Funcionan sin IA y sin internet: reglas medidas, en tu ordenador.</p></div>
+</div>
+<div class="tabs">
+  {% for k, l in (("gancho","Puntuar ganchos"),("ritmo","Ritmo del guion"),("pie","Revisar el texto del post"),("humanizar","Humanizar"),("viral","Ranking viral")) %}
+  <a href="?h={{ k }}" class="{{ 'on' if h == k }}">{{ l }}</a>{% endfor %}
+</div>
+{% if error %}<div class="flash-inline err mb-l">{{ error }}</div>{% endif %}
+<form method="post" action="/herramientas" class="card">
+  <input type="hidden" name="h" value="{{ h }}">
+  {% if h == "gancho" %}
+    <label>Uno o varios ganchos, uno por línea</label>
+    <textarea name="texto" rows="5" placeholder="Hola chicos, en el vídeo de hoy os enseño…&#10;30 tickets, una foto cada uno y la hoja se rellena sola.">{{ entrada.texto or '' }}</textarea>
+    <p class="hint">Mira cinco cosas: longitud, concreción (cifras y nombres), tensión, lo importante delante y si habla a alguien. Caza los ganchos flojos; no promete cuál se hará viral.</p>
+  {% elif h == "ritmo" %}
+    <label>El guion, una frase por línea (tal y como lo dirás)</label>
+    <textarea name="texto" rows="9">{{ entrada.texto or '' }}</textarea>
+    <div class="field w-s mt"><label>Duración objetivo (s)</label><input type="number" name="objetivo" value="{{ entrada.objetivo or 30 }}" min="5" max="180"></div>
+  {% elif h == "pie" %}
+    <label>El texto del post o la descripción</label>
+    <textarea name="texto" rows="8">{{ entrada.texto or '' }}</textarea>
+    <div class="row mt"><div class="field"><label>Red</label><select name="red"><option value="instagram" {{ 'selected' if entrada.red != 'tiktok' }}>Instagram</option><option value="tiktok" {{ 'selected' if entrada.red == 'tiktok' }}>TikTok</option></select></div>
+    <div class="field"><label>Palabras por las que te quieres encontrar (separadas por comas)</label><input type="text" name="palabras" value="{{ entrada.palabras or '' }}"></div></div>
+  {% elif h == "humanizar" %}
+    <label>Un texto escrito con IA</label>
+    <textarea name="texto" rows="9">{{ entrada.texto or '' }}</textarea>
+    <p class="hint">Quita caracteres invisibles, rayas largas y muletillas típicas de IA, y marca lo que conviene reescribir a mano. No «engaña» a ningún detector: deja el texto más natural.</p>
+  {% elif h == "viral" %}
+    <label>Una línea por vídeo: cuenta, mediana de vistas de esa cuenta, vistas del vídeo y gancho (separados por tabulador o ;)</label>
+    <textarea name="texto" rows="8" placeholder="@cuenta1;12k;180k;Nadie te cuenta que tus primeros 30 vídeos van a fracasar&#10;@cuenta2;400k;520k;Hoy os enseño mi rutina de mañana">{{ entrada.texto or '' }}</textarea>
+  {% endif %}
+  <div class="mt"><button class="btn">Analizar</button></div>
+</form>
+
+{% if res %}
+<div class="res">
+{% if h == "gancho" %}
+  {% for g in res %}
+  <div class="mb"><b>{{ g.score|round(1) }}</b> <span class="badge {{ 'ok' if g.nivel == 'FUERTE' else ('err' if g.nivel == 'FLOJO' else '') }}">{{ g.nivel }}</span> «{{ g.gancho }}»{% if g.formula %} <small class="muted">· fórmula: {{ g.formula.nombre }}</small>{% endif %}
+    <div class="bar-score"><i style="width:{{ g.score }}%"></i></div>
+    <small class="muted">{% for k, p in g.propiedades.items() %}{{ k }} {{ p.score|round|int }}{{ ' · ' if not loop.last }}{% endfor %} · punto débil: {{ g.peor }}</small>
+    {% for r in g.rompe_tratos %}<br><small class="chk FAIL">{{ r }}</small>{% endfor %}</div>
+  {% endfor %}
+{% elif h == "ritmo" %}
+  <p><b>{{ res.total_s }} s</b> para un objetivo de {{ res.objetivo_s }} s · {{ res.total_palabras }} palabras a {{ res.ppm }} palabras por minuto</p>
+  <table class="table"><tbody>{% for b in res.beats %}<tr><td class="num">{{ b.inicio }}</td><td class="num">{{ b.duracion }} s</td><td>{% if b.tipo %}<span class="badge">{{ b.tipo }}</span>{% endif %}</td><td>{{ b.texto }}</td></tr>{% endfor %}</tbody></table>
+  {% for a in res.avisos %}<p class="chk WARN">· {{ a }}</p>{% endfor %}
+{% elif h == "pie" %}
+  <p class="meta">Lo que se ve antes de «… más»</p><div class="feed-box">{{ res.lo_que_se_ve }}<span class="muted"> … más</span></div>
+  {% for c in res.checks %}<p class="mb-s"><span class="chk {{ c.estado }}">{{ c.estado }}</span> <b>{{ c.check }}</b> <small class="muted">{{ c.detalle }}</small></p>{% endfor %}
+  <p><b>{{ res.veredicto }}</b></p>
+{% elif h == "humanizar" %}
+  <div class="copiable"><pre id="humanizado">{{ res.texto }}</pre><button type="button" class="btn sm secondary" data-copy-from="#humanizado">Copiar</button></div>
+  <p class="mt">Suena humano: <b>{{ res.detector_antes.human_score|round|int }}</b> → <b>{{ res.detector_despues.human_score|round|int }}</b>/100 · {{ res.total_cambios }} cambios</p>
+  {% for c in res.cambios[:20] %}<small class="muted">{{ c.tipo }}: «{{ c.que }}» → «{{ c.por }}» ({{ c.veces }})</small><br>{% endfor %}
+  {% for s in res.senales %}<p class="chk WARN">· {{ s.nombre }} ({{ s.veces }}): {{ s.arreglo }}</p>{% endfor %}
+{% elif h == "viral" %}
+  <p class="muted">Base: {{ res.base }} · {{ res.n }} vídeos de {{ res.cuentas }} cuentas</p>
+  <table class="table"><tbody>{% for v in res.videos %}<tr><td class="num"><b>x{{ v.multiplo }}</b></td><td>{{ v.cuenta }}</td><td>{{ v.formula or '—' }}</td><td>«{{ v.gancho }}»</td></tr>{% endfor %}</tbody></table>
+  {% if res.formulas_top %}<p class="mt">Fórmulas que más se repiten arriba: {% for f, n in res.formulas_top %}{{ f }} ({{ n }}){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}
