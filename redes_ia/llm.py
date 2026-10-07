@@ -12,9 +12,9 @@ PROVEEDORES = {
     "gemini": {"nombre": "Google Gemini", "clave": "clave_gemini", "gratis": True,
                "donde": "https://aistudio.google.com/apikey", "defecto": "gemini-2.5-flash"},
     "openai": {"nombre": "OpenAI (ChatGPT)", "clave": "clave_openai", "gratis": False,
-               "donde": "https://platform.openai.com/api-keys", "defecto": "gpt-4o-mini"},
+               "donde": "https://platform.openai.com/api-keys", "defecto": "gpt-5-mini"},
     "anthropic": {"nombre": "Anthropic (Claude)", "clave": "clave_anthropic", "gratis": False,
-                  "donde": "https://console.anthropic.com/settings/keys", "defecto": "claude-3-5-haiku-latest"},
+                  "donde": "https://console.anthropic.com/settings/keys", "defecto": "claude-haiku-4-5-20251001"},
     "openrouter": {"nombre": "OpenRouter (muchos modelos)", "clave": "clave_openrouter", "gratis": False,
                    "donde": "https://openrouter.ai/keys", "defecto": "google/gemini-2.5-flash"},
     "ollama": {"nombre": "Ollama (en tu ordenador)", "clave": None, "gratis": True,
@@ -127,7 +127,7 @@ def modelo_por_defecto(p: str) -> str:
     if p == "gemini" and ms:
         return ms[0]
     if p == "openai" and ms:
-        for pref in ("gpt-4.1-mini", "gpt-4o-mini"):
+        for pref in ("gpt-5.4-mini", "gpt-5-mini", "gpt-4.1-mini", "gpt-4o-mini"):
             if pref in ms:
                 return pref
         minis = [m for m in ms if "mini" in m]
