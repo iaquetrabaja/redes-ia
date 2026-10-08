@@ -368,3 +368,27 @@ details.explica > div { margin-top: 8px; color: var(--text-2); }
 details.explica p { margin: 6px 0; } details.explica p.li { padding-left: 14px; position: relative; }
 details.explica p.li::before { content: "·"; position: absolute; left: 3px; font-weight: 700; }
 details.explica b { color: var(--text); font-weight: 600; }
+
+/* Competencia */
+.table.comp tr.fila-mia td { background: var(--accent-soft); }
+.table.comp tr.fila-mia td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.table.comp td.mejor { min-width: 200px; font-size: 13px; }
+.comprobacion { border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 12px 14px; margin: 0 0 var(--s3); font-size: 14px; }
+.comprobacion.bien { border-color: var(--good); } .comprobacion.bien > b { color: var(--good); }
+.comprobacion.aviso { border-color: #b45309; } .comprobacion.aviso > b { color: #b45309; }
+.comprobacion.mal { border-color: var(--bad); } .comprobacion.mal > b { color: var(--bad); }
+.comprobacion p { margin: 6px 0 0; color: var(--text-2); }
+.comprobacion ul { margin: 8px 0 0; padding-left: 18px; } .comprobacion li { margin: 3px 0; }
+.conclusion { border-left: 3px solid var(--accent); }
+.conclusion p { margin: 0; font-size: 15px; }
+.barras { display: grid; gap: 8px; }
+.barra { display: grid; grid-template-columns: minmax(0, 38%) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.barra .nombre { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barra .pista { height: 10px; background: var(--muted-bg); border-radius: 3px; overflow: hidden; }
+.barra .pista i { display: block; height: 100%; background: var(--border-strong); border-radius: 3px; }
+.barra .pista i.neg { background: var(--bad); opacity: .5; }
+.barra.mia .nombre { color: var(--text); font-weight: 500; }
+.barra.mia .pista i { background: var(--accent); }
+.barra .cifra { min-width: 64px; text-align: right; }
+.post .cover .badge { background: var(--surface); }
+.post .cover .badge.solid { background: var(--text); color: var(--bg); }

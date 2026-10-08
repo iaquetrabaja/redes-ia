@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Competencia{% endblock %}
+{% macro valor(x, suf) %}{% if x is none %}—{% elif suf == '%' %}{{ x|dec }} %{% elif x is float and x < 100 %}{{ x|dec }}{% else %}{{ x|miles }}{% endif %}{% endmacro %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Competencia</h1><p>Tus cuentas y las que vigilas, con sus números de los últimos {{ dias }} días.</p></div>
+  <div class="row" style="align-items:center">
+    <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}{% if cp.red %}&red={{ cp.red }}{% endif %}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
+    <form method="post" action="{{ B }}/actualizar"><button class="btn secondary">Actualizar datos</button></form>
+  </div>
+</div>
+
+<form method="post" action="{{ B }}/competencia/cuenta" class="card mb-l" data-comprobar>
+  <div class="section-head"><h2>Añadir una cuenta</h2><small>sin contraseñas: solo se lee lo público</small></div>
+  <div class="row">
+    <div class="field w-s"><label>Red</label><select name="red"><option value="tiktok">TikTok</option><option value="youtube">YouTube Shorts</option><option value="instagram">Instagram (a mano o CSV)</option></select></div>
+    <div class="field"><label>Su @ o el enlace de su perfil</label><input type="text" name="usuario" placeholder="@usuario o https://www.tiktok.com/@usuario" required autocomplete="off"></div>
+    <div class="field w-0"><label class="check"><input type="checkbox" name="mia" value="1"> Es mi cuenta</label></div>
+    <div class="field w-0"><button type="button" class="btn secondary" data-boton-comprobar>Comprobar</button></div>
+    <div class="field w-0"><button class="btn">Añadir</button></div>
+  </div>
+  <div class="comprobacion" data-resultado hidden></div>
+  <p class="hint">Tu @ de TikTok sale debajo de tu foto en la app (Perfil) o en la dirección de tu perfil en la web: tiktok.com/<b>@tu_usuario</b>. La cuenta tiene que ser pública. Al añadirla se comprueba sola; si algo falla, te dice qué hacer.</p>
+</form>
+
+{% for g in grupos %}
+<div class="section">
+  <div class="section-head"><h2>{{ g.nombre }}</h2><small>{{ g.cuentas|length }} cuentas</small></div>
+  <div class="table-wrap"><table class="table comp">
+    <thead><tr><th>Cuenta</th><th class="r">Seguidores</th><th class="r">En {{ dias }} días</th><th class="r">Vídeos</th><th class="r">Por semana</th><th class="r">Mediana vistas</th><th class="r">Engagement</th><th>Mejor vídeo</th><th class="r" title="Vídeos con más del doble de vistas que su mediana">&gt; ×2</th><th></th></tr></thead>
+    <tbody>{% for c in g.cuentas %}
+      <tr class="{{ 'fila-mia' if c.mia }}">
+        <td><a href="{{ B }}/competencia/{{ c.id }}?dias={{ dias if dias > 7 else 30 }}"><b>@{{ c.usuario }}</b></a>{% if c.mia %} <span class="badge accent">Tú</span>{% endif %}{% if c.demo %} <span class="badge">demo</span>{% endif %}
+          {% if c.error %}<br><small class="chk FAIL">{{ c.error[:140] }}</small>{% elif not c.ultimo %}<br><small class="muted">Aún sin leer</small>{% endif %}</td>
+        <td class="r num">{{ c.seguidores|miles }}</td>
+        <td class="r num">{% if c.ganados is none %}<span class="muted">—</span>{% else %}<span class="{{ 'up' if c.ganados > 0 else ('down' if c.ganados < 0) }}">{{ '+' if c.ganados > 0 }}{{ c.ganados|miles }}</span>{% if c.crecimiento is not none %}<br><small class="muted">{{ '+' if c.crecimiento > 0 }}{{ c.crecimiento|dec }} %</small>{% endif %}{% endif %}</td>
+        <td class="r num">{{ c.n }}</td>
+        <td class="r num">{{ c.frecuencia|dec if c.frecuencia is not none else '—' }}</td>
+        <td class="r num">{{ c.mediana|miles }}</td>
+        <td class="r num">{% if c.engagement is not none %}{{ c.engagement|dec }} %{% else %}<span class="muted" title="Sin me gusta ni guardados todavía">—</span>{% endif %}</td>
+        <td class="mejor">{% if c.mejor %}<a href="{{ c.mejor.url }}" target="_blank" rel="noopener noreferrer">{{ (c.mejor.texto or '(sin texto)')[:46] }}</a><br><small class="muted">{{ c.mejor.vistas|miles }} vistas{% if c.mejor.multiplo %} · x{{ c.mejor.multiplo|dec }} su media{% endif %}</small>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="r num">{{ c.sobre2 or '—' }}</td>
+        <td class="r"><form class="inline" method="post" action="{{ B }}/competencia/cuenta/{{ c.id }}/borrar" onsubmit="return confirm('¿Quitar @{{ c.usuario }} y sus datos?')"><button class="btn danger sm">Quitar</button></form></td>
+      </tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% else %}
+<div class="empty mb-l">Todavía no hay cuentas. Añade la tuya (marca «Es mi cuenta») y 3-10 de tu nicho con un tamaño parecido o algo mayor.</div>
+{% endfor %}
+
+<div class="section" id="comparativa">
+  <div class="section-head"><h2>Tú contra tu competencia</h2>
+    {% if cp.redes|length > 1 %}<div class="seg">{% for rd in cp.redes %}<a href="?dias={{ dias }}&red={{ rd }}#comparativa" class="{{ 'on' if cp.red == rd }}">{{ REDES[rd].replace(' Shorts', '') }}</a>{% endfor %}</div>{% endif %}</div>
+  {% if not cp.red %}
+  <div class="empty">Para comparar hace falta tu cuenta y al menos una de la competencia en la misma red.</div>
+  {% else %}
+  {% if cp.conclusion %}<div class="card conclusion mb-l"><p>{{ cp.conclusion }}</p></div>{% endif %}
+  <div class="table-wrap mb-l"><table class="table">
+    <thead><tr><th>Últimos {{ dias }} días</th><th class="r">Tú</th><th class="r">Mediana de la competencia</th><th class="r">Diferencia</th><th class="r">Tu puesto</th></tr></thead>
+    <tbody>{% for f in cp.filas %}
+      <tr><td>{{ f.etiqueta }}</td><td class="r num"><b>{{ valor(f.tu, f.suf) }}</b></td><td class="r num">{{ valor(f.mediana, f.suf) }}</td>
+        <td class="r num">{% if f.diferencia is none %}—{% else %}<span class="{{ 'up' if f.diferencia > 0 else ('down' if f.diferencia < 0) }}">{{ '+' if f.diferencia > 0 }}{% if f.clave == 'crecimiento' %}{{ f.diferencia|dec }} puntos{% else %}{{ f.diferencia }} %{% endif %}</span>{% endif %}</td>
+        <td class="r num">{{ f.puesto }} de {{ f.barras|length }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <div class="grid g2">
+    {% for f in cp.filas %}
+    <div class="card">
+      <div class="section-head"><h3>{{ f.etiqueta }}</h3>{% if f.mediana is not none %}<small>mediana: {{ valor(f.mediana, f.suf) }}</small>{% endif %}</div>
+      <div class="barras">{% for b in f.barras %}
+        <div class="barra {{ 'mia' if b.mia }}"><span class="nombre">{{ b.nombre }}</span>
+          <span class="pista"><i style="width:{{ b.ancho }}%" class="{{ 'neg' if b.valor is not none and b.valor < 0 }}"></i></span>
+          <span class="cifra num">{{ valor(b.valor, f.suf) }}</span></div>
+      {% endfor %}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<details class="section card">
+  <summary>Competencia de Instagram a mano (CSV)</summary>
+  <form method="post" action="{{ B }}/ajustes/csv" enctype="multipart/form-data" class="mt">
+    <p class="muted">Instagram no deja leer cuentas ajenas con tu token. Si quieres comparar, pega sus vídeos: columnas <code>cuenta,url,texto,vistas,likes,fecha</code> (vale coma o punto y coma; «12k» o «1,2M» también).</p>
+    <textarea name="csv" rows="4" placeholder="cuenta;url;texto;vistas;likes;fecha&#10;otra_cuenta;https://www.instagram.com/reel/XXXX/;Nadie te cuenta…;120k;8400;2026-10-01"></textarea>
+    <div class="row mt"><input type="file" name="archivo" accept=".csv,.txt"><button class="btn">Importar</button></div>
+  </form>
+</details>
+{% endblock %}

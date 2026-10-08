@@ -6,16 +6,45 @@ Están pensados para quien abre Redes IA por primera vez (y para enseñarlo en u
 
 EXPLICACIONES: dict[str, tuple[str, list[str]]] = {
     "resumen": ("Tus números de un vistazo", [
-        "Aquí ves cómo les va a tus vídeos en el periodo que elijas (3, 7, 30 o 90 días) y si vas a mejor o a peor "
-        "que en el periodo anterior del mismo tamaño.",
-        "- **Vistas, me gusta y comentarios**: lo básico. Las vistas dicen cuánta gente lo vio; no si le gustó.",
-        "- **Compartidos y guardados**: lo que más pesa para que TikTok e Instagram enseñen tu vídeo a más gente. "
-        "Un vídeo que se guarda es útil; uno que se comparte, se recomienda solo.",
-        "- **Seguidores**: la evolución día a día en cada red.",
-        "- **Tus vídeos del periodo**: con la columna «× tu media», que compara cada vídeo con tu vídeo típico. "
-        "x3 significa que tuvo el triple de vistas que tu mediana. Así sabes qué funcionó de verdad, sin que te "
-        "engañe un día bueno.",
+        "Cómo les va a tus vídeos en el periodo que elijas (3, 7, 30 o 90 días) y si vas a mejor o a peor que en "
+        "el periodo anterior del mismo tamaño: **↑ en verde** si subes, **↓ en rojo** si bajas. Arriba puedes ver "
+        "todas tus redes juntas o una sola.",
+        "- **Vistas y media por vídeo**: cuánta gente lo vio. La media dice si tus vídeos llegan a más gente o si "
+        "solo publicaste más.",
+        "- **Engagement**: (me gusta + comentarios + compartidos + guardados) / vistas. Dice si a quien lo ve le "
+        "importa. Un 5-10 % es bueno en vídeos cortos.",
+        "- **Compartidos y guardados**: lo que más pesa para que TikTok e Instagram enseñen tu vídeo a más gente.",
+        "- **Vistas ganadas por día**: las vistas nuevas que sumaron todos tus vídeos ese día (no solo los nuevos). "
+        "Se calcula con la foto diaria que guarda cada actualización.",
+        "- **× tu media**: compara cada vídeo con tu vídeo típico (la mediana). x3 = el triple de vistas de lo "
+        "normal para ti. Así sabes qué funcionó de verdad, sin que te engañe un día bueno.",
         "Los datos se actualizan solos cada día (o con «Actualizar datos»). Todo se guarda en tu ordenador.",
+    ]),
+    "competencia": ("Tu competencia y tú, con los mismos números", [
+        "Cada cuenta que vigilas, con sus números del periodo elegido. **Tus cuentas van resaltadas.** Pulsa un @ "
+        "para ver su ficha.",
+        "- **Mediana de vistas**: las vistas de su vídeo «del medio» (la mitad tiene más y la mitad menos). Se usa "
+        "en vez de la media para que un vídeo viral no lo distorsione.",
+        "- **Engagement**: (me gusta + comentarios + compartidos + guardados) / vistas, de media en sus vídeos.",
+        "- **Por semana**: cuántos vídeos publica. **> ×2**: cuántos de sus vídeos tuvieron más del doble de vistas "
+        "que su mediana: esos son los que hay que mirar.",
+        "- **Tú contra tu competencia**: tus números frente a la **mediana de tus competidores** de esa red, y tu "
+        "puesto. La frase de arriba te dice en qué vas por delante, en qué por detrás y qué mejorar primero.",
+        "**Conectar TikTok**: escribe el @ (o pega el enlace del perfil) y pulsa **«Comprobar»**. Si sale el nombre, "
+        "los seguidores y los últimos vídeos, funciona. Si no, te dice qué pasa: @ mal escrito, cuenta privada, sin "
+        "vídeos públicos o TikTok frenando (espera unos minutos y apaga la VPN). Nunca se pide contraseña.",
+    ]),
+    "competencia.ficha": ("La ficha de una cuenta", [
+        "Todo lo que se sabe de esta cuenta: cómo crecen sus seguidores (un punto por cada día que se actualizó) y "
+        "cada vídeo guardado.",
+        "- **× su media**: vistas del vídeo divididas entre la mediana de vistas de la cuenta. x2 = el doble de lo "
+        "normal para ella. Es la mejor pista de qué tema o gancho le funcionó a **su** público.",
+        "- **Sus vídeos que funcionan**: los que pasan de ×1,5. Mira el gancho y el tema, no copies el vídeo: "
+        "Ideas ya los usa para proponerte los tuyos.",
+        "- **Engagement**: (me gusta + comentarios + compartidos + guardados) / vistas. En TikTok, el de la "
+        "competencia se lee de sus vídeos del último mes.",
+        "De TikTok, sin login, se leen sus **~10 últimos vídeos** en cada actualización; con los días se van "
+        "guardando más.",
     ]),
     "ideas": ("Ideas de vídeo con nota", [
         "Redes IA busca qué está funcionando y te lo convierte en ideas para tu canal, cada una con una nota del 0 "
@@ -115,8 +144,8 @@ EXPLICACIONES: dict[str, tuple[str, list[str]]] = {
         "en tu ordenador.",
     ]),
     "ajustes.redes": ("Tus cuentas y tu competencia", [
-        "- **TikTok y YouTube**: pon tu @ y el de las cuentas que quieras vigilar. Se leen los datos públicos, sin "
-        "contraseña.",
+        "- **TikTok y YouTube**: tu @ y el de las cuentas que quieras vigilar se añaden en **Competencia**, donde "
+        "puedes comprobar al momento que se leen bien. Solo datos públicos, sin contraseña.",
         "- **Instagram**: tu cuenta profesional con la API oficial (la guía explica cómo sacar el token). La "
         "competencia de Instagram se añade a mano o con un CSV, porque Instagram no da datos de cuentas ajenas.",
     ]),
@@ -144,4 +173,6 @@ def clave(ruta: str, params) -> str:
         return "herramientas." + (params.get("h") or "gancho")
     if base == "ajustes":
         return "ajustes." + (params.get("tab") or "ia")
+    if base == "competencia" and p.count("/") > 1:
+        return "competencia.ficha"
     return base

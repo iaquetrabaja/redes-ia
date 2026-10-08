@@ -51,6 +51,16 @@ def _negrita(texto: str):
 plantillas.env.filters["negrita"] = _negrita
 
 
+def _dec(n, d: int = 1):
+    """Número con decimales a la española: 4,3"""
+    if n is None:
+        return "—"
+    return f"{n:.{d}f}".replace(".", ",")
+
+
+plantillas.env.filters["dec"] = _dec
+
+
 @app.on_event("startup")
 def _arranque():
     iniciar()
@@ -113,11 +123,100 @@ def resumen(request: Request, dias: int = 0, red: str = ""):
     if (A.get("modo_demo") != "1" and not llm.configurado() and not q("SELECT 1 FROM cuentas", one=True)
             and not request.query_params.get("saltar")):
         return RedirectResponse(BASE + "/bienvenida", status_code=303)
+    _demo_al_dia()
     dias = dias if dias in (3, 7, 30, 90) else int(A.get("dias_resumen") or 7)
     red = red if red in datos.REDES else ""
     r = metricas.resumen(dias, red or None)
-    return ver(request, "resumen.html", r=r, dias=dias, red=red, tareas=tareas.ultimas(4),
+    cp = metricas.comparativa(dias, red or None)
+    return ver(request, "resumen.html", r=r, dias=dias, red=red, tareas=tareas.ultimas(4), cp=cp,
                hay_cuentas=bool(q("SELECT 1 FROM cuentas WHERE mia=1", one=True)))
+
+
+def _demo_al_dia():
+    """En modo demo, los datos de ejemplo se rehacen una vez al día para que las gráficas lleguen hasta hoy."""
+    if A.get("modo_demo") == "1":
+        from ..servicios import demo
+        demo.cargar()
+
+
+def _periodo(dias: int) -> int:
+    return dias if dias in (3, 7, 30, 90) else 7
+
+
+# ---------------------------------------------------------------- competencia
+@app.get("/competencia", response_class=HTMLResponse)
+def ver_competencia(request: Request, dias: int = 7, red: str = ""):
+    _demo_al_dia()
+    dias = _periodo(dias)
+    return ver(request, "competencia.html", dias=dias, grupos=metricas.competencia(dias),
+               cp=metricas.comparativa(dias, red or None))
+
+
+@app.get("/competencia/{cid}", response_class=HTMLResponse)
+def ver_ficha(request: Request, cid: int, dias: int = 30):
+    f = metricas.ficha(cid, _periodo(dias))
+    if not f:
+        return ir("/competencia", err="Esa cuenta ya no está")
+    return ver(request, "ficha.html", f=f, dias=_periodo(dias))
+
+
+@app.get("/api/comprobar")
+def api_comprobar(red: str = "tiktok", usuario: str = ""):
+    """Lee la página pública de la cuenta y dice si funciona (nombre, seguidores, últimos vídeos) o qué falla."""
+    if SOLO_LECTURA:
+        return {"ok": False, "tipo": "demo", "mensaje": "En la demo de solo lectura no se comprueban cuentas.",
+                "que_hacer": "Descarga Redes IA y pruébalo con tu @: tarda unos segundos.", "videos": []}
+    if red not in datos.REDES:
+        return {"ok": False, "tipo": "otro", "mensaje": "Red no válida", "que_hacer": "", "videos": []}
+    return datos.comprobar_cuenta(red, usuario)
+
+
+def anadir_cuenta_comprobada(red: str, usuario: str, mia: bool, vuelta: str):
+    """Comprueba la cuenta antes de guardarla. Si no existe, es privada o el @ está mal, no se guarda y se dice qué
+    hacer. Si TikTok solo está frenando, se guarda y se leerá en la próxima actualización."""
+    if red not in datos.REDES:
+        return ir(vuelta, err="Red no válida")
+    if A.get("modo_demo") == "1":
+        return ir(vuelta, err="En el modo demo no se añaden cuentas reales. Arranca sin --demo para usar las tuyas.")
+    aviso = ""
+    if red in ("tiktok", "youtube"):
+        r = datos.comprobar_cuenta(red, usuario)
+        if not r["ok"] and r["tipo"] not in ("frena", "sin_conexion"):
+            return ir(vuelta, err=f"{r['mensaje']} {r['que_hacer']}".strip())
+        if not r["ok"]:
+            aviso = f" Ojo: {r['mensaje']} Se leerá en la próxima actualización."
+        elif r["tipo"] == "sin_videos":
+            aviso = " " + r["mensaje"]
+        usuario = r.get("usuario") or usuario
+    try:
+        cid = datos.anadir_cuenta(red, usuario, mia)
+    except Exception as e:  # noqa: BLE001
+        return ir(vuelta, err=str(e))
+    c = q("SELECT * FROM cuentas WHERE id=?", (cid,), one=True)
+    if not aviso:
+        tareas.ejecutar(f"cuenta-{cid}", datos.actualizar_cuenta, c)
+    return ir(vuelta, ok=f"@{c['usuario']} añadida{' (tuya)' if mia else ''}; leyendo sus vídeos…{aviso}")
+
+
+@app.post("/competencia/cuenta")
+def competencia_cuenta(red: str = Form(...), usuario: str = Form(""), mia: str = Form("0")):
+    return anadir_cuenta_comprobada(red, usuario, mia == "1", "/competencia")
+
+
+def _borrar_cuenta(cid: int):
+    vids = [r["id"] for r in q("SELECT id FROM videos WHERE cuenta_id=?", (cid,))]
+    for v in vids:
+        ex("DELETE FROM metricas WHERE video_id=?", (v,))
+        ex("DELETE FROM comentarios WHERE video_id=?", (v,))
+    ex("DELETE FROM videos WHERE cuenta_id=?", (cid,))
+    ex("DELETE FROM seguidores WHERE cuenta_id=?", (cid,))
+    ex("DELETE FROM cuentas WHERE id=?", (cid,))
+
+
+@app.post("/competencia/cuenta/{cid}/borrar")
+def competencia_cuenta_borrar(cid: int):
+    _borrar_cuenta(cid)
+    return ir("/competencia", ok="Cuenta quitada")
 
 
 @app.get("/bienvenida", response_class=HTMLResponse)
@@ -143,8 +242,11 @@ def bienvenida_ia(proveedor: str = Form(...), clave: str = Form(""), ollama_url:
 def bienvenida_cuentas(tiktok: str = Form(""), competencia: str = Form(""), contexto: str = Form("")):
     if contexto.strip():
         A.set("contexto", contexto.strip()[:600])
-    if tiktok.strip():
-        datos.anadir_cuenta("tiktok", tiktok, True)
+    if tiktok.strip() and A.get("modo_demo") != "1":
+        r = datos.comprobar_cuenta("tiktok", tiktok)
+        if not r["ok"] and r["tipo"] not in ("frena", "sin_conexion"):
+            return ir("/bienvenida?paso=2", err=f"Tu TikTok: {r['mensaje']} {r['que_hacer']}".strip())
+        datos.anadir_cuenta("tiktok", r.get("usuario") or tiktok, True)
     for u in [x for x in competencia.replace("\n", ",").split(",") if x.strip()][:15]:
         datos.anadir_cuenta("tiktok", u, False)
     tareas.ejecutar("datos", datos.actualizar_todo)
@@ -364,29 +466,14 @@ def ajustes_modelos(proveedor: str):
 
 
 @app.post("/ajustes/cuenta")
-def ajustes_cuenta(red: str = Form(...), usuario: str = Form(...), mia: str = Form("0")):
-    if red not in datos.REDES:
-        return ir("/ajustes?tab=redes", err="Red no válida")
-    try:
-        cid = datos.anadir_cuenta(red, usuario, mia == "1")
-    except Exception as e:  # noqa: BLE001
-        return ir("/ajustes?tab=redes", err=str(e))
-    if A.get("modo_demo") != "1":
-        c = q("SELECT * FROM cuentas WHERE id=?", (cid,), one=True)
-        tareas.ejecutar(f"cuenta-{cid}", datos.actualizar_cuenta, c)
-    return ir("/ajustes?tab=redes", ok="Cuenta añadida; leyendo sus vídeos…")
+def ajustes_cuenta(red: str = Form(...), usuario: str = Form(""), mia: str = Form("0")):
+    return anadir_cuenta_comprobada(red, usuario, mia == "1", "/competencia")
 
 
 @app.post("/ajustes/cuenta/{cid}/borrar")
 def ajustes_cuenta_borrar(cid: int):
-    vids = [r["id"] for r in q("SELECT id FROM videos WHERE cuenta_id=?", (cid,))]
-    for v in vids:
-        ex("DELETE FROM metricas WHERE video_id=?", (v,))
-        ex("DELETE FROM comentarios WHERE video_id=?", (v,))
-    ex("DELETE FROM videos WHERE cuenta_id=?", (cid,))
-    ex("DELETE FROM seguidores WHERE cuenta_id=?", (cid,))
-    ex("DELETE FROM cuentas WHERE id=?", (cid,))
-    return ir("/ajustes?tab=redes", ok="Cuenta quitada")
+    _borrar_cuenta(cid)
+    return ir("/competencia", ok="Cuenta quitada")
 
 
 @app.post("/ajustes/instagram")
@@ -416,8 +503,8 @@ async def ajustes_csv(request: Request):
     try:
         n = datos.importar_csv(texto)
     except Exception as e:  # noqa: BLE001
-        return ir("/ajustes?tab=redes", err=f"No se pudo leer el CSV: {e}")
-    return ir("/ajustes?tab=redes", ok=f"{n} vídeos importados")
+        return ir("/competencia", err=f"No se pudo leer el CSV: {e}")
+    return ir("/competencia", ok=f"{n} vídeos importados")
 
 
 @app.post("/ajustes/general")

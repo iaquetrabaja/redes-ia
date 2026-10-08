@@ -31,12 +31,13 @@
   <p class="mt"><a href="{{ B }}/?saltar=1" class="hint">Prefiero verlo primero: abre la app con <code>--demo</code> para ver datos de ejemplo.</a></p>
   {% else %}
   <form method="post" action="{{ B }}/bienvenida/cuentas" class="card">
-    <div class="field"><label>Tu usuario de TikTok</label><input type="text" name="tiktok" placeholder="@tu_usuario"></div>
+    <div class="field"><label>Tu usuario de TikTok</label><input type="text" name="tiktok" placeholder="@tu_usuario o el enlace de tu perfil">
+      <p class="hint">Es el @ que sale debajo de tu foto en la app (no tu nombre). La cuenta tiene que ser pública. Al pulsar «Empezar» se comprueba y, si algo falla, te dice qué hacer. Nunca se pide contraseña.</p></div>
     <div class="field"><label>Cuentas de tu competencia o referentes en TikTok (separadas por comas)</label><textarea name="competencia" rows="3" placeholder="@referente1, @referente2, @referente3"></textarea>
       <p class="hint">De 3 a 10 cuentas de tu nicho. De ellas salen las ideas: sus vídeos que superan su propia media.</p></div>
     <div class="field"><label>¿De qué va tu canal y para quién? (una o dos frases)</label><textarea name="contexto" rows="2" placeholder="Enseño IA práctica a autónomos y pequeños negocios…"></textarea></div>
     <button class="btn">Empezar</button>
-    <p class="hint mt">Instagram (con la API oficial) y YouTube los conectas después en Ajustes → Redes.</p>
+    <p class="hint mt">Instagram (con la API oficial) se conecta después en Ajustes → Redes; YouTube y más competencia, en Competencia.</p>
   </form>
   {% endif %}
 </div>

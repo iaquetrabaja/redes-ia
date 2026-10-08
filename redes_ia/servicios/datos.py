@@ -3,7 +3,7 @@ import csv
 import io
 import logging
 import time
-from datetime import date
+from datetime import date, timedelta
 
 from .. import ajustes as A
 from ..colectores import instagram, tiktok, youtube
@@ -68,7 +68,9 @@ def actualizar_cuenta(c: dict) -> str:
             if red == "instagram" and mia:
                 m.update({k: val for k, val in instagram.estadisticas(v["vid"], v.get("tipo", "")).items()
                           if val is not None})
-            if red == "tiktok" and mia:       # mis vídeos: detalle completo (likes, compartidos, guardados)
+            # detalle completo (likes, compartidos, guardados): siempre en los míos; en la competencia, solo en sus
+            # vídeos del último mes y como mucho cada 3 días, para poder calcular su engagement sin cargar a TikTok
+            if red == "tiktok" and (mia or _toca_detalle(vid_id, v)):
                 try:
                     m.update({k: val for k, val in tiktok.detalle(v["url"]).items()
                               if val is not None and k != "texto" and k != "duracion"})
@@ -96,6 +98,36 @@ def actualizar_cuenta(c: dict) -> str:
         ex("UPDATE cuentas SET error=? WHERE id=?", (str(e)[:300], c["id"]))
         log.info("Cuenta %s/%s: %s", red, c["usuario"], e)
         return f"error: {e}"
+
+
+def _toca_detalle(video_id: int, v: dict) -> bool:
+    if (v.get("publicado") or "")[:10] < (date.today() - timedelta(days=30)).isoformat():
+        return False
+    hace = (date.today() - timedelta(days=3)).isoformat()
+    return not q("SELECT 1 FROM metricas WHERE video_id=? AND likes IS NOT NULL AND compartidos IS NOT NULL "
+                 "AND fecha>=?", (video_id, hace), one=True)
+
+
+def comprobar_cuenta(red: str, usuario: str) -> dict:
+    """Lee la página pública antes de guardar la cuenta: nombre, seguidores y últimos vídeos, o qué falla y qué hacer.
+    No pide contraseñas ni inicia sesión en ningún sitio."""
+    if red == "tiktok":
+        return tiktok.comprobar(usuario)
+    if red == "youtube":
+        try:
+            p = youtube.perfil(usuario, maximo=5)
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "tipo": "otro", "mensaje": str(e)[:200], "usuario": usuario, "videos": [],
+                    "que_hacer": "Revisa el @ del canal (sale en la dirección: youtube.com/@canal) y que tenga Shorts."}
+        return {"ok": True, "tipo": "ok" if p["videos"] else "sin_videos", "usuario": p["usuario"],
+                "nombre": p["nombre"], "seguidores": p["seguidores"], "que_hacer": "",
+                "videos": [{"texto": v["texto"], "vistas": v["vistas"], "publicado": None, "url": v["url"]}
+                           for v in p["videos"][:5]],
+                "mensaje": f"Funciona: {p['nombre']}, {len(p['videos'])} Shorts leídos." if p["videos"]
+                else "El canal existe, pero no tiene Shorts públicos."}
+    return {"ok": True, "tipo": "manual", "usuario": usuario.strip().lstrip("@").lower(), "videos": [],
+            "nombre": None, "seguidores": None, "que_hacer": "",
+            "mensaje": "Instagram no deja leer cuentas ajenas con tu token: añade sus vídeos a mano o por CSV."}
 
 
 def actualizar_todo() -> dict:

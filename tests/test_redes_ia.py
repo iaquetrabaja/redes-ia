@@ -125,6 +125,113 @@ class TestColectores(unittest.TestCase):
         self.assertEqual(v["vistas"], 12000)
 
 
+def _pagina_embed(usuario, info, videos):
+    estado = {"source": {"data": {f"/embed/@{usuario}": {"userInfo": info, "videoList": videos}}}}
+    return f'<script id="__FRONTITY_CONNECT_STATE__" type="application/json">{json.dumps(estado)}</script>'
+
+
+class TestComprobarTikTok(unittest.TestCase):
+    """La comprobación al añadir una cuenta: cada caso con su mensaje y qué hacer. Sin internet (respuestas simuladas)."""
+
+    def _comprobar(self, usuario, respuestas):
+        from redes_ia.colectores import tiktok
+
+        def get(url, **kw):
+            for trozo, resp in respuestas.items():
+                if trozo in url:
+                    return resp
+            return Resp(None, 404, "")
+        with mock.patch("redes_ia.colectores.tiktok.httpx.Client.get", side_effect=get), \
+                mock.patch("redes_ia.colectores.tiktok.time.sleep"):
+            return tiktok.comprobar(usuario)
+
+    def test_ok_con_enlace_del_perfil(self):
+        html = _pagina_embed("mi_cuenta", {"nickname": "Mi Cuenta", "followerCount": 3150, "privateAccount": False},
+                             [{"id": "7693912477498658051", "desc": "Mi vídeo", "playCount": 900}])
+        r = self._comprobar("https://www.tiktok.com/@Mi_Cuenta?lang=es", {"/embed/@mi_cuenta": Resp(None, 200, html)})
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["tipo"], "ok")
+        self.assertEqual((r["usuario"], r["nombre"], r["seguidores"]), ("mi_cuenta", "Mi Cuenta", 3150))
+        self.assertEqual(r["videos"][0]["vistas"], 900)
+
+    def test_privada(self):
+        html = _pagina_embed("privada_x", {"nickname": "P", "followerCount": 10, "privateAccount": True}, [])
+        r = self._comprobar("@privada_x", {"/embed/@privada_x": Resp(None, 200, html)})
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["tipo"], "privada")
+        self.assertIn("Cuenta privada", r["que_hacer"])
+
+    def test_no_existe(self):
+        r = self._comprobar("no_existe_x", {"/embed/@no_existe_x": Resp(None, 500, "Internal Server Error"),
+                                            "tiktok.com/@no_existe_x": Resp(None, 200, '{"statusCode":10221}')})
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["tipo"], "no_existe")
+        self.assertIn("bien escrito", r["que_hacer"])
+
+    def test_sin_videos(self):
+        html = _pagina_embed("nueva_x", {"nickname": "Nueva", "followerCount": 0, "privateAccount": False}, [])
+        r = self._comprobar("nueva_x", {"/embed/@nueva_x": Resp(None, 200, html)})
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["tipo"], "sin_videos")
+        self.assertEqual(r["videos"], [])
+
+    def test_tiktok_frena_y_sin_conexion(self):
+        import httpx
+        r = self._comprobar("lenta_x", {"/embed/@lenta_x": Resp(None, 429, ""), "tiktok.com/@lenta_x": Resp(None, 429, "")})
+        self.assertEqual(r["tipo"], "frena")
+        self.assertIn("minutos", r["que_hacer"])
+        from redes_ia.colectores import tiktok
+        with mock.patch("redes_ia.colectores.tiktok.httpx.Client.get", side_effect=httpx.ConnectError("sin red")), \
+                mock.patch("redes_ia.colectores.tiktok.time.sleep"):
+            self.assertEqual(tiktok.comprobar("alguien")["tipo"], "sin_conexion")
+
+    def test_formato_y_vacio_sin_peticiones(self):
+        from redes_ia.colectores import tiktok
+        with mock.patch("redes_ia.colectores.tiktok.httpx.Client.get") as g:
+            self.assertEqual(tiktok.comprobar("mi cuenta")["tipo"], "formato")
+            self.assertEqual(tiktok.comprobar("  ")["tipo"], "vacio")
+            g.assert_not_called()
+        self.assertEqual(tiktok.limpiar_usuario("https://www.tiktok.com/@Pepe.Ruiz/video/123"), "pepe.ruiz")
+        self.assertEqual(tiktok.limpiar_usuario(" @Pepe_Ruiz "), "pepe_ruiz")
+
+
+class TestMetricasComparativa(unittest.TestCase):
+    def test_engagement(self):
+        from redes_ia.servicios.metricas import engagement
+        self.assertEqual(engagement({"vistas": 1000, "likes": 50, "comentarios": 5, "compartidos": 10, "guardados": 15}), 8.0)
+        self.assertIsNone(engagement({"vistas": 1000}))       # sin interacciones no es 0 %, es «no se sabe»
+        self.assertIsNone(engagement({"vistas": 0, "likes": 3}))
+
+    def test_estadisticas_de_una_cuenta(self):
+        from datetime import date, timedelta
+        from redes_ia.servicios.metricas import estadisticas
+        hoy = date.today()
+        vids = [{"publicado": (hoy - timedelta(days=d)).isoformat(), "vistas": v, "er": er, "multiplo": m}
+                for d, v, er, m in [(1, 1000, 5.0, 1.0), (3, 3000, 7.0, 3.0), (5, 500, None, 0.5), (20, 900, 4.0, 0.9)]]
+        s = estadisticas(vids, 7)
+        self.assertEqual(s["n"], 3)
+        self.assertEqual(s["mediana"], 1000)
+        self.assertEqual(s["engagement"], 6.0)
+        self.assertEqual(s["sobre2"], 1)
+        self.assertEqual(s["mejor"]["vistas"], 3000)
+        self.assertEqual(s["frecuencia"], 3.0)
+        # solo hay vídeos de las últimas 3 semanas: la frecuencia de 90 días se calcula sobre esas 3 semanas
+        self.assertEqual(estadisticas(vids, 90)["frecuencia"], round(4 * 7 / 21, 1))
+
+    def test_conclusion(self):
+        from redes_ia.servicios.metricas import conclusion
+        filas = [{"clave": "mediana", "suf": "", "tu": 2000, "mediana": 4000, "diferencia": -50},
+                 {"clave": "engagement", "suf": "%", "tu": 9.0, "mediana": 6.0, "diferencia": 50},
+                 {"clave": "frecuencia", "suf": "", "tu": 3.0, "mediana": 3.1, "diferencia": -3},
+                 {"clave": "crecimiento", "suf": "%", "tu": 1.0, "mediana": 1.0, "diferencia": 0.0}]
+        t = conclusion(filas, "TikTok")
+        self.assertIn("tu engagement es un 50 % mayor", t)
+        self.assertIn("pero tu mediana de vistas es un 50 % menor (2.000 frente a 4.000 vistas)", t)
+        self.assertIn("Lo primero a mejorar", t)
+        self.assertNotIn("publicas", t)          # una diferencia del 3 % no se menciona
+        self.assertIn("a la par", conclusion([{**f, "diferencia": 0} for f in filas], "TikTok"))
+
+
 class TestGuion(unittest.TestCase):
     def test_bucle_generar_puntuar_corregir(self):
         from redes_ia.servicios import estudio
@@ -169,7 +276,8 @@ class TestRutasDemo(unittest.TestCase):
         cls.c = TestClient(app)
 
     def test_todas_las_paginas(self):
-        for u in ["/", "/?dias=3", "/?dias=90&red=tiktok", "/ideas", "/ideas?estado=todas&orden=nota", "/automatizaciones",
+        for u in ["/", "/?dias=3", "/?dias=90&red=tiktok", "/?dias=30&red=youtube", "/competencia",
+                  "/competencia?dias=90&red=instagram", "/competencia?dias=3&red=youtube", "/ideas", "/ideas?estado=todas&orden=nota", "/automatizaciones",
                   "/estudio", "/estudio?tab=comentarios", "/estudio?tab=plan", "/estudio?tab=voz", "/herramientas",
                   "/herramientas?h=ritmo", "/ajustes", "/ajustes?tab=redes", "/ajustes?tab=general",
                   "/ajustes?tab=claude", "/bienvenida", "/api/estado"]:
@@ -181,6 +289,67 @@ class TestRutasDemo(unittest.TestCase):
         r = self.c.post("/herramientas", data={"h": "gancho", "texto": "Hola chicos, en el vídeo de hoy\n30 tickets y listo"})
         self.assertEqual(r.status_code, 200)
         self.assertIn("FLOJO", r.text)
+
+    def test_ficha_de_cada_cuenta(self):
+        for c in q("SELECT id, usuario FROM cuentas WHERE demo=1"):
+            for d in (7, 90):
+                r = self.c.get(f"/competencia/{c['id']}?dias={d}")
+                self.assertEqual(r.status_code, 200, c)
+                self.assertIn("@" + c["usuario"], r.text)
+        self.assertEqual(self.c.get("/competencia/999999", follow_redirects=False).status_code, 303)
+
+    def test_competencia_resalta_lo_tuyo_y_compara(self):
+        r = self.c.get("/competencia?dias=7")
+        self.assertIn("fila-mia", r.text)
+        self.assertIn("Tú contra tu competencia", r.text)
+        self.assertIn("Frente a la mediana de tu competencia", r.text)
+        self.assertIn("Engagement", self.c.get("/").text)
+
+    def test_demo_completa(self):
+        from redes_ia.servicios import metricas as M
+        for red in ("tiktok", "instagram", "youtube"):
+            n = q("SELECT COUNT(*) n FROM cuentas WHERE demo=1 AND mia=0 AND red=?", (red,), one=True)["n"]
+            self.assertGreaterEqual(n, 3, red)
+        r = M.resumen(90)
+        self.assertGreater(sum(v for _, v in r["grafica"]["ganadas"]["TikTok"]), 0)
+        self.assertGreater(len(r["grafica"]["seguidores"]), 1)
+        self.assertIsNotNone(r["k"]["act"]["engagement"])
+
+    def test_con_prefijo_de_url(self):
+        from redes_ia.web import app as appmod
+        with mock.patch.object(appmod, "BASE", "/x"), mock.patch.dict(appmod.plantillas.env.globals, {"B": "/x"}):
+            cid = q("SELECT id FROM cuentas WHERE demo=1 AND mia=0 LIMIT 1", one=True)["id"]
+            for u in ["/", "/competencia", f"/competencia/{cid}"]:
+                r = self.c.get(u)
+                self.assertEqual(r.status_code, 200, u)
+                self.assertIn('href="/x/competencia', r.text, u)
+                self.assertIn('src="/x/static/', r.text, u)
+                self.assertNotIn('href="/competencia', r.text, u)
+                self.assertNotIn('action="/competencia', r.text, u)
+            r = self.c.post("/competencia/cuenta", data={"red": "tiktok", "usuario": "x"}, follow_redirects=False)
+            self.assertTrue(r.headers["location"].startswith("/x/competencia"))
+
+    def test_anadir_cuenta_comprueba_antes(self):
+        from redes_ia.servicios import datos
+        A.set("modo_demo", "0")
+        try:
+            malo = {"ok": False, "tipo": "no_existe", "mensaje": "No existe ninguna cuenta @nadie_x en TikTok.",
+                    "que_hacer": "Revisa que esté bien escrito.", "usuario": "nadie_x", "videos": []}
+            with mock.patch.object(datos, "comprobar_cuenta", return_value=malo):
+                r = self.c.post("/competencia/cuenta", data={"red": "tiktok", "usuario": "@nadie_x"},
+                                follow_redirects=False)
+            self.assertIn("err=", r.headers["location"])
+            self.assertIsNone(q("SELECT 1 FROM cuentas WHERE usuario='nadie_x'", one=True))
+            frena = {**malo, "tipo": "frena", "mensaje": "TikTok no responde ahora mismo.", "usuario": "lento_x"}
+            with mock.patch.object(datos, "comprobar_cuenta", return_value=frena):
+                r = self.c.post("/competencia/cuenta", data={"red": "tiktok", "usuario": "lento_x"},
+                                follow_redirects=False)
+            self.assertIn("ok=", r.headers["location"])
+            cid = q("SELECT id FROM cuentas WHERE usuario='lento_x'", one=True)["id"]
+            self.c.post(f"/competencia/cuenta/{cid}/borrar")
+            self.assertIsNone(q("SELECT 1 FROM cuentas WHERE usuario='lento_x'", one=True))
+        finally:
+            A.set("modo_demo", "1")
 
     def test_post_desde_otra_web_bloqueado(self):
         r = self.c.post("/ideas/nueva", data={"titulo": "x"}, headers={"origin": "https://malo.example"})

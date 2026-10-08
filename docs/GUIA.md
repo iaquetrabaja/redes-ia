@@ -10,7 +10,7 @@ lo que necesites con el índice.
 5. [Conseguir tu clave GRATIS de Gemini](#5-conseguir-tu-clave-gratis-de-gemini)
 6. [Otras IAs y lo que cuestan](#6-otras-ias-y-lo-que-cuestan)
 7. [Primer arranque](#7-primer-arranque)
-8. [Conectar TikTok y tu competencia](#8-conectar-tiktok-y-tu-competencia)
+8. [Conectar TikTok y tu competencia](#8-conectar-tiktok-y-tu-competencia) (con «Comprobar»)
 9. [Conectar Instagram (API oficial)](#9-conectar-instagram-api-oficial)
 10. [YouTube Shorts](#10-youtube-shorts)
 11. [Usar cada sección](#11-usar-cada-sección)
@@ -156,22 +156,75 @@ La primera vez que abres Redes IA aparece un asistente de dos pasos:
 
 ## 8. Conectar TikTok y tu competencia
 
-En **Ajustes → Redes y competencia → Añadir cuenta**:
+TikTok se conecta **solo con tu @**. No hay que iniciar sesión, ni dar contraseñas, ni instalar nada en el móvil:
+Redes IA lee lo mismo que ve cualquiera que abre tu perfil sin cuenta. **Nunca te pedirá tu contraseña**; si algo
+te la pide, no es Redes IA.
 
-- **Red**: TikTok.
-- **Usuario o enlace**: `@usuario` o el enlace del perfil.
-- Marca **«Es mi cuenta»** solo en la tuya.
+### 8.1 Encuentra tu @ exacto
 
-Qué se lee, sin contraseñas y solo lo público:
+Es el nombre de usuario, **no** el nombre que se ve en grande. Sin espacios ni tildes: solo letras, números, puntos y
+guiones bajos.
 
-- De cada cuenta: seguidores y sus **~10 últimos vídeos** con las vistas.
+- **En la app (móvil)**: abajo a la derecha, **Perfil**. Tu @ está justo debajo de tu foto (por ejemplo
+  `@maria.ia_trucos`). También puedes pulsar **☰ → Ajustes y privacidad → Cuenta → Información de la cuenta** o
+  **Compartir perfil → Copiar enlace**.
+- **En la web (ordenador)**: entra en [tiktok.com](https://www.tiktok.com), pulsa **Perfil** en el menú de la
+  izquierda y mira la barra de direcciones: `https://www.tiktok.com/@maria.ia_trucos`. Lo que va detrás de la @ es tu
+  usuario.
+
+Vale cualquiera de las tres formas: `@maria.ia_trucos`, `maria.ia_trucos` o el enlace completo del perfil (también
+el enlace de uno de tus vídeos). Los enlaces cortos tipo `vm.tiktok.com/…` no valen: ábrelos y copia el de la barra.
+
+### 8.2 La cuenta tiene que ser pública
+
+TikTok no enseña los vídeos de una cuenta privada a nadie, tampoco a Redes IA. Para comprobarlo: **Perfil → ☰ →
+Ajustes y privacidad → Privacidad → «Cuenta privada»** tiene que estar **desactivado**. Los vídeos que tengas en
+«Solo yo» o «Amigos» tampoco se ven.
+
+### 8.3 Añádela y comprueba que funciona
+
+En **Competencia → Añadir una cuenta**:
+
+1. **Red**: TikTok.
+2. **Su @ o el enlace de su perfil**: tu @.
+3. Marca **«Es mi cuenta»** (solo en la tuya).
+4. Pulsa **«Comprobar»**. En unos segundos verás una de estas dos cosas:
+   - En verde: **«Funciona: @tu_usuario (Tu nombre), 10 vídeos leídos»**, tus seguidores y tus últimos vídeos con
+     sus vistas. Está bien conectado: pulsa **«Añadir»**.
+   - En rojo, **qué pasa y qué hacer**: el @ no existe (está mal escrito), la cuenta es privada, no tiene vídeos
+     públicos, TikTok está frenando las lecturas o no hay conexión. Corrígelo y vuelve a comprobar.
+5. Al pulsar «Añadir» se comprueba otra vez, por si acaso. Si el @ no existe o es privada, **no se guarda** y te dice
+   por qué. Si TikTok solo está frenando, se guarda y se lee en la próxima actualización.
+
+Repite con las cuentas de tu competencia (sin marcar «Es mi cuenta»).
+
+![Competencia](img/15-competencia.png)
+
+### 8.4 Cómo saber que va bien
+
+- En **Competencia**, tu fila sale resaltada con la etiqueta **«Tú»**, con seguidores y vídeos. Si hay un problema,
+  debajo del @ aparece el error en rojo.
+- En **Resumen** ves tus vistas y tus vídeos. Los seguidores y las «vistas ganadas por día» necesitan **dos días**
+  de datos para dibujar la curva: el primer día solo hay un punto.
+- En **Ajustes → General → Historial de tareas**, la tarea `datos` dice cuántos vídeos leyó de cada cuenta.
+
+### 8.5 Qué se lee y por qué solo eso
+
+- De cada cuenta: seguidores y sus **~10 últimos vídeos** con las vistas. Es lo que TikTok enseña en la página
+  pública de «insertar perfil» (la que usan las webs para mostrar un TikTok). Para ver más hacia atrás haría falta
+  iniciar sesión o simular un navegador, y eso va contra las normas de TikTok y acaba en bloqueos.
+- Como cada día se guardan los vídeos nuevos, **con las semanas tendrás todo tu historial** desde que empezaste a
+  usar Redes IA.
 - De **tus** vídeos, además: me gusta, comentarios, compartidos, guardados y los comentarios de tus 5 últimos vídeos.
+- De la **competencia**: me gusta, comentarios, compartidos y guardados de sus vídeos del último mes (como mucho cada
+  3 días), para poder calcular su engagement y compararte.
+- Va despacio a propósito: pocas peticiones, con pausas y reintentos suaves.
 
-**Cómo elegir la competencia**: cuentas de tu mismo tema y tamaño parecido o algo mayor. Las ideas salen de sus
-vídeos que **superan la media de su propia cuenta**: así un vídeo de 50.000 vistas en una cuenta que suele hacer
-5.000 cuenta más que uno de 500.000 en una cuenta que suele hacer 1 millón.
+### 8.6 Cómo elegir la competencia
 
-![Cuentas](img/10-ajustes-redes.png)
+Cuentas de tu mismo tema y tamaño parecido o algo mayor (entre 3 y 10). Las ideas salen de sus vídeos que **superan
+la media de su propia cuenta**: así un vídeo de 50.000 vistas en una cuenta que suele hacer 5.000 cuenta más que uno
+de 500.000 en una cuenta que suele hacer 1 millón.
 
 ## 9. Conectar Instagram (API oficial)
 
@@ -206,7 +259,7 @@ cuenta profesional**. Elige **Creador** o **Empresa** (las dos valen).
 
 ### 9.4 Pégalo en Redes IA
 
-**Ajustes → Redes y competencia → Conectar tu Instagram → Token de acceso** → pégalo → **Guardar**. Si todo va bien,
+**Ajustes → Redes → Conectar tu Instagram → Token de acceso** → pégalo → **Guardar**. Si todo va bien,
 aparece tu cuenta en la lista de cuentas.
 
 **Renovación**: el token dura 60 días. Redes IA lo renueva solo cada semana mientras lo uses. Si pasan más de 60 días
@@ -216,7 +269,7 @@ sin abrir la app, genera uno nuevo con el paso 9.3.
 
 Con tu token, Instagram **no deja leer cuentas ajenas**. Tienes dos opciones:
 
-- **A mano o por CSV** (lo más sencillo): en Ajustes, «Competencia de Instagram a mano (CSV)». Columnas
+- **A mano o por CSV** (lo más sencillo): en Competencia, al final: «Competencia de Instagram a mano (CSV)». Columnas
   `cuenta,url,texto,vistas,likes,fecha`. Vale con «12k» o «1,2M». Puedes copiar los datos que ves en la app.
 - **Business Discovery** (avanzado): necesita una página de Facebook vinculada a tu Instagram, un token de Facebook
   con los permisos `instagram_basic` e `instagram_manage_insights`, y el id de tu cuenta de Instagram profesional.
@@ -225,17 +278,41 @@ Con tu token, Instagram **no deja leer cuentas ajenas**. Tienes dos opciones:
 
 ## 10. YouTube Shorts
 
-Opcional. **Añadir cuenta → YouTube Shorts → @canal**. Lee sus Shorts recientes con las vistas, sin clave.
+Opcional. **Competencia → Añadir una cuenta → YouTube Shorts → @canal** (y «Comprobar»). Lee sus Shorts recientes con las vistas, sin clave.
 
 ## 11. Usar cada sección
 
 ### Resumen
 
-Tus vistas, me gusta, comentarios, compartidos y guardados de los vídeos **publicados** en el periodo (3, 7, 30 o 90
-días; por defecto 7), comparados con el periodo anterior, y la evolución de seguidores. «Actualizar datos» lo lee
-todo otra vez.
+Tus números de los vídeos **publicados** en el periodo (3, 7, 30 o 90 días; por defecto 7), todas tus redes juntas o
+una sola:
+
+- **Seguidores, vídeos, vistas y media por vídeo**, y debajo **engagement**, me gusta, comentarios, compartidos y
+  guardados. Cada uno con su cambio frente al periodo anterior del mismo tamaño: **↑ en verde**, **↓ en rojo**.
+- **Por plataforma**: los mismos números en columnas (TikTok, Instagram, YouTube) para ver dónde vas mejor.
+- **Vistas ganadas por día** (las vistas nuevas que sumaron todos tus vídeos cada día) y **tus seguidores** por red.
+- **Tú contra tu competencia**: la frase de la comparativa (ver Competencia).
+- **Lo que mejor te funciona** (con la portada y cuántas veces superó tu media) y **tus vídeos del periodo** con su
+  engagement.
+
+**Engagement** = (me gusta + comentarios + compartidos + guardados) / vistas. «Actualizar datos» lo lee todo otra vez.
 
 ![Resumen](img/01-resumen.png)
+
+### Competencia
+
+Todas las cuentas por red, **las tuyas resaltadas**, con: seguidores y cuántos ganó en el periodo, vídeos
+publicados, vídeos por semana, **mediana de vistas** (la de su vídeo «del medio», para que un viral no engañe),
+engagement medio, su mejor vídeo y cuántos superaron **×2 su mediana**. Aquí se añaden (con «Comprobar») y se quitan
+las cuentas.
+
+- **Ficha de cada cuenta** (pulsa su @): la curva de seguidores, «sus vídeos que funcionan» (más de ×1,5 su
+  mediana) y todos sus vídeos con vistas, × su media, engagement y fecha.
+- **Tú contra tu competencia**: tu mediana de vistas, engagement, frecuencia y crecimiento de seguidores frente a la
+  **mediana de tus competidores** en esa red, con barras, tu puesto y una frase que dice en qué vas por delante, en
+  qué por detrás y qué mejorar primero.
+
+![Ficha de una cuenta](img/16-ficha-cuenta.png)
 
 ### Ideas
 
@@ -392,9 +469,39 @@ http://127.0.0.1:8780.
 
 **«rechaza la clave (401/403)».** La clave está mal copiada o caducada. Genera otra y pégala.
 
-**Una cuenta de TikTok sale con error.** Puede ser privada, no existir o que TikTok haya bloqueado un rato las
-lecturas (va despacio a propósito para evitarlo). Se reintenta en la siguiente actualización. Si falla con todas
-durante días, TikTok habrá cambiado su web: actualiza Redes IA.
+### Problemas con TikTok
+
+Lo primero, siempre: en **Competencia**, escribe el @ y pulsa **«Comprobar»**. Te dice exactamente qué pasa.
+
+**«No existe ninguna cuenta @… en TikTok».** El @ está mal escrito o has puesto tu nombre en vez de tu usuario.
+Cópialo de la app (debajo de tu foto) o del enlace de tu perfil (apartado 8.1). Si te cambiaste el @ hace poco, usa
+el nuevo.
+
+**«Es una cuenta privada».** Hazla pública: Perfil → ☰ → Ajustes y privacidad → Privacidad → desactiva «Cuenta
+privada». Las cuentas privadas no se pueden leer de ninguna forma.
+
+**«Existe, pero no tiene vídeos públicos».** Es normal en una cuenta nueva. Publica tu primer vídeo (en «Todo el
+mundo», no en «Solo yo») y vuelve a comprobar. La cuenta se guarda igualmente y se leerá cuando haya vídeos.
+
+**«TikTok está frenando las lecturas».** TikTok limita a veces cuántas páginas se leen seguidas desde una misma
+conexión. No es un error tuyo: espera **10-15 minutos** y vuelve a comprobar. Redes IA ya va despacio y reintenta
+solo; si al añadir la cuenta TikTok frena, la guarda y la lee en la siguiente actualización.
+
+**Uso una VPN.** Apágala para comprobar y actualizar: TikTok frena o bloquea muchas direcciones de VPN.
+
+**«No hay conexión con TikTok».** Comprueba tu internet. En redes de empresa, colegio o biblioteca TikTok suele estar
+bloqueado: prueba desde casa o con los datos del móvil.
+
+**La lista de vídeos sale vacía en Resumen.** Mira tres cosas: que la cuenta tenga «Es mi cuenta» marcado (en
+Competencia sale con «Tú»), que el periodo elegido tenga vídeos publicados (prueba con 30 o 90 días) y que la
+actualización haya terminado (en el menú pone «Trabajando…» mientras lee). Si en Competencia tu fila tiene un error en
+rojo, pulsa «Comprobar» con tu @.
+
+**Mi país o región.** Si en tu país TikTok no está disponible o va limitado, la lectura falla igual que con una VPN:
+«no hay conexión» o «TikTok está frenando». Redes IA no puede saltarse eso.
+
+**Faltan me gusta o guardados de un vídeo.** Se leen vídeo a vídeo y alguno puede fallar un día; se reintenta en la
+siguiente actualización. Si TikTok cambia su web y falla con todas las cuentas durante días, actualiza Redes IA.
 
 **«El token de Instagram no es válido o ha caducado».** Genera uno nuevo (apartado 9.3) y pégalo.
 
@@ -430,7 +537,7 @@ Puedes abrirlos con el Bloc de notas para comprobarlo.
 
 - **No publica, no comenta y no manda mensajes por ti.** Todo son borradores que copias tú. Automatizar eso con un
   navegador va contra las normas de TikTok e Instagram y acaba en bloqueos.
-- **TikTok sin login** da los ~10 últimos vídeos de cada cuenta: sirve para ver qué funciona ahora, no años de
+- **TikTok sin login** da los ~10 últimos vídeos de cada cuenta (y se van acumulando día a día): sirve para ver qué funciona ahora, no años de
   historial.
 - **La nota del gancho caza ganchos flojos, no adivina el éxito.** Lo que hace viral un vídeo depende de tu cara, tu
   edición, el audio y a quién se lo enseña el algoritmo.

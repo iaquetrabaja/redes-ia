@@ -48,3 +48,36 @@
   var ancla = document.querySelector(".main .tabs") || document.querySelector(".main .page-head");
   if (ancla) ancla.after(e);
 })();
+
+// Competencia: «Comprobar» lee la página pública de la cuenta antes de añadirla y enseña lo que encuentra
+// (o qué falla y qué hacer). Al pulsar «Añadir» se vuelve a comprobar en el servidor.
+(function () {
+  const form = document.querySelector("form[data-comprobar]"); if (!form) return;
+  const boton = form.querySelector("[data-boton-comprobar]"), caja = form.querySelector("[data-resultado]");
+  const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const miles = n => n == null ? "—" : Number(n).toLocaleString("es-ES");
+  boton.addEventListener("click", async () => {
+    const red = form.red.value, usuario = form.usuario.value.trim();
+    if (!usuario) { form.usuario.focus(); return; }
+    caja.hidden = false; caja.className = "comprobacion"; boton.disabled = true;
+    caja.innerHTML = "Leyendo la página pública de la cuenta… (unos segundos; si TikTok va lento, hasta medio minuto)";
+    try {
+      const r = await fetch((window.B || "") + "/api/comprobar?red=" + encodeURIComponent(red) + "&usuario=" + encodeURIComponent(usuario)).then(x => x.json());
+      caja.className = "comprobacion " + (r.ok ? (r.tipo === "ok" ? "bien" : "aviso") : "mal");
+      let h = "<b>" + esc(r.mensaje) + "</b>";
+      if (r.que_hacer) h += "<p>" + esc(r.que_hacer) + "</p>";
+      if (r.ok && r.seguidores != null) h += "<p>" + esc(r.nombre || "") + " · " + miles(r.seguidores) + " seguidores</p>";
+      if (r.videos && r.videos.length) {
+        h += "<ul>" + r.videos.map(v => "<li><span>" + esc((v.texto || "(sin texto)").slice(0, 80)) + "</span> <small>" +
+          miles(v.vistas) + " vistas" + (v.publicado ? " · " + esc(v.publicado.slice(0, 10)) : "") + "</small></li>").join("") + "</ul>";
+      }
+      if (r.ok) h += "<p class='hint'>Todo bien: pulsa «Añadir».</p>";
+      caja.innerHTML = h;
+    } catch (e) {
+      caja.className = "comprobacion mal";
+      caja.innerHTML = "<b>No se pudo comprobar.</b><p>¿Sigue abierta la ventana negra de Redes IA? Vuelve a intentarlo.</p>";
+    }
+    boton.disabled = false;
+  });
+  form.addEventListener("submit", () => { const b = form.querySelector("button:not([type=button])"); b.disabled = true; b.textContent = "Comprobando…"; });
+})();

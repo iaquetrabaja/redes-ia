@@ -1,15 +1,34 @@
 """Datos de demostración (marcados como demo) para ver el panel sin conectar nada. Se guardan en datos/demo/."""
 import json
+import math
 import random
 from datetime import date, datetime, timedelta, timezone
+from urllib.parse import quote
 
 from .. import ajustes as A
-from ..db import ex, q
+from ..db import ex, q, transaccion
 from . import estudio
 
+# Cambia este número si cambian los datos de ejemplo: la demo se vuelve a generar sola al arrancar.
+VERSION = "4"
 MIA = "tu_cuenta_demo"
-COMPETENCIA = [("tiktok", "ia_al_dia_demo", 4200), ("tiktok", "trucos_ia_demo", 18000),
-               ("instagram", "negocio_y_ia_demo", 9100)]
+# Tus cuentas: red, seguidores hoy, vistas de un vídeo típico, días entre vídeos, engagement base (%)
+MIAS = [("tiktok", 12480, 2600, 2.4, 9.5), ("instagram", 5230, 1700, 3.5, 8.0), ("youtube", 1940, 950, 4.5, 6.5)]
+# Competencia: red, usuario, seguidores hoy, vistas típicas, vídeos por semana, engagement base (%), crecimiento/día
+COMPETENCIA = [
+    ("tiktok", "la_ia_en_casa_demo", 95200, 21000, 6.0, 4.1, 0.0016),
+    ("tiktok", "ia_al_dia_demo", 41800, 8800, 4.5, 5.8, 0.0012),
+    ("tiktok", "trucos_ia_demo", 18300, 5200, 3.5, 7.4, 0.0021),
+    ("tiktok", "autonomo_digital_demo", 7800, 2300, 2.5, 8.6, 0.0009),
+    ("instagram", "marketing_con_ia_demo", 26400, 6100, 4.0, 4.9, 0.0010),
+    ("instagram", "negocio_y_ia_demo", 9100, 2800, 3.0, 6.3, 0.0014),
+    ("instagram", "pymes_digitales_demo", 4300, 1250, 1.5, 7.1, 0.0006),
+    ("youtube", "ia_explicada_demo", 31000, 7200, 3.0, 3.8, 0.0011),
+    ("youtube", "herramientas_ia_demo", 12500, 3100, 2.0, 4.6, 0.0008),
+    ("youtube", "tutoriales_rapidos_demo", 5600, 1500, 4.0, 5.2, 0.0017),
+]
+DIAS_HISTORIA = 190
+TONOS = ["#e9e4dc", "#dde5e3", "#e6e0ea", "#e3e8dc", "#ece2dc", "#dfe3ea"]
 TEMAS = [
     "Cómo respondo 200 correos a la semana sin escribirlos yo",
     "3 trucos de ChatGPT que uso cada día en mi negocio",
@@ -26,44 +45,130 @@ TEMAS = [
 ]
 
 
+def portada(texto: str, k: int) -> str:
+    """Miniatura vertical de ejemplo (SVG en línea): fondo suave y el título, como una portada sencilla."""
+    palabras, lineas, l = texto.split(), [], ""
+    for w in palabras:
+        if len(l) + len(w) > 14 and l:
+            lineas.append(l)
+            l = w
+        else:
+            l = (l + " " + w).strip()
+    lineas = (lineas + [l])[:5]
+    y0 = 160 - len(lineas) * 13
+    txt = "".join(f'<text x="18" y="{y0 + i * 27}" font-family="Roboto,Arial,sans-serif" font-size="21" '
+                  f'font-weight="500" fill="#1d1d1b">{t.replace("&", "y").replace("<", "")}</text>'
+                  for i, t in enumerate(lineas))
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 320"><rect width="180" height="320" '
+           f'fill="{TONOS[k % len(TONOS)]}"/><rect x="18" y="{y0 - 34}" width="26" height="3" fill="#d24d1e"/>{txt}</svg>')
+    return "data:image/svg+xml," + quote(svg)
+
+
+def _borrar_demo() -> None:
+    ids = [r["id"] for r in q("SELECT id FROM cuentas WHERE demo=1")]
+    with transaccion() as c:
+        for cid in ids:
+            c.execute("DELETE FROM metricas WHERE video_id IN (SELECT id FROM videos WHERE cuenta_id=?)", (cid,))
+            c.execute("DELETE FROM comentarios WHERE video_id IN (SELECT id FROM videos WHERE cuenta_id=?)", (cid,))
+            c.execute("DELETE FROM videos WHERE cuenta_id=?", (cid,))
+            c.execute("DELETE FROM seguidores WHERE cuenta_id=?", (cid,))
+            c.execute("DELETE FROM cuentas WHERE id=?", (cid,))
+        if not q("SELECT 1 FROM cuentas WHERE demo=0", one=True):   # base solo de demo: fuera también lo demás
+            for t in ("ideas", "tendencias", "comentarios", "tareas"):
+                c.execute(f"DELETE FROM {t}")
+
+
+def _seguidores(c, cid: int, hoy_n: int, ritmo: float, rnd: random.Random, saltos=()) -> None:
+    """Historia diaria de seguidores hacia atrás desde hoy, con algo de ruido y algún salto (un vídeo que funcionó)."""
+    n, filas = float(hoy_n), []
+    for d in range(DIAS_HISTORIA + 1):
+        filas.append((cid, (date.today() - timedelta(days=d)).isoformat(), int(n)))
+        baja = n * ritmo * rnd.uniform(0.2, 1.8) + (n * 0.012 if d in saltos else 0)
+        n = max(10, n - baja)
+    c.executemany("INSERT OR REPLACE INTO seguidores VALUES(?,?,?)", filas)
+
+
+def _metricas(vistas: int, er: float, rnd: random.Random) -> tuple:
+    """Me gusta, comentarios, compartidos y guardados que suman más o menos el engagement pedido."""
+    inter = vistas * er / 100
+    reparto = [rnd.uniform(.62, .72), rnd.uniform(.05, .09), rnd.uniform(.08, .14)]
+    reparto.append(max(0.05, 1 - sum(reparto)))
+    return tuple(int(inter * r) for r in reparto)
+
+
 def cargar(seed: int = 7) -> None:
+    """Carga los datos de ejemplo. Si ya estaban de otra versión o de otro día, los rehace (para que las gráficas
+    lleguen siempre hasta hoy)."""
     rnd = random.Random(seed)
+    marca = f"{VERSION}:{date.today().isoformat()}"
     if q("SELECT 1 FROM cuentas WHERE demo=1", one=True):
-        return
+        if A.get("demo_version") == marca:
+            return
+        _borrar_demo()
+    A.set("demo_version", marca)
     A.set("modo_demo", "1")
     A.set("contexto", "Canal de demostración sobre IA práctica para autónomos y pequeños negocios.")
     A.set("voz", "### Quién soy\nCreador de demostración que enseña IA práctica a autónomos.\n\n### Tono\nCercano, "
                  "directo, sin humo.\n\n### Nunca uso\n«revolucionario», «game changer», «literalmente» de relleno.")
     hoy = date.today()
-    cuentas = []
-    for red, seg in (("tiktok", 3150), ("instagram", 2280)):
-        cid = ex("INSERT INTO cuentas(red,usuario,mia,nombre,seguidores,ultimo,demo) VALUES(?,?,?,?,?,?,1)",
-                 (red, MIA, 1, "Tu cuenta (demo)", seg, datetime.now().strftime("%Y-%m-%d %H:%M")))
-        cuentas.append((cid, red, True, seg, 2400 if red == "tiktok" else 1500))
-        for d in range(30, -1, -1):
-            ex("INSERT OR REPLACE INTO seguidores VALUES(?,?,?)",
-               (cid, (hoy - timedelta(days=d)).isoformat(), seg - d * rnd.randint(4, 14)))
-    for red, u, seg in COMPETENCIA:
-        cid = ex("INSERT INTO cuentas(red,usuario,mia,nombre,seguidores,ultimo,demo) VALUES(?,?,0,?,?,?,1)",
-                 (red, u, u.replace("_demo", "").replace("_", " ").title() + " (demo)", seg,
-                  datetime.now().strftime("%Y-%m-%d %H:%M")))
-        cuentas.append((cid, red, False, seg, seg // 3))
+    ahora = datetime.now(timezone.utc)
+    ultimo = datetime.now().strftime("%Y-%m-%d %H:%M")
     n = 0
-    for cid, red, mia, seg, base in cuentas:
-        for i in range(12):
-            dias = i * 2 + rnd.randint(0, 1)
-            pub = (datetime.now(timezone.utc) - timedelta(days=dias, hours=rnd.randint(0, 20))).isoformat(timespec="seconds")
-            mult = rnd.choice([0.4, 0.6, 0.8, 1, 1, 1.2, 1.5, 2.5, 6]) if i != 3 else 9
-            vistas = int(base * mult)
-            tema = TEMAS[(i + n) % len(TEMAS)] if mia else rnd.choice(TEMAS).replace("mi ", "tu ")
-            n += 1
-            vid = f"demo{cid}{i}"
-            v_id = ex("INSERT INTO videos(cuenta_id,red,vid,url,texto,portada,publicado,duracion) VALUES(?,?,?,?,?,?,?,?)",
-                      (cid, red, vid, f"https://example.com/demo/{vid}", tema + ". Comenta GUIA y te la mando.", None,
-                       pub, rnd.randint(25, 70)))
-            ex("INSERT INTO metricas VALUES(?,?,?,?,?,?,?,?)",
-               (v_id, hoy.isoformat(), vistas, int(vistas * rnd.uniform(.04, .09)), int(vistas * rnd.uniform(.002, .01)),
-                int(vistas * rnd.uniform(.002, .02)), int(vistas * rnd.uniform(.004, .04)), int(vistas * .8)))
+    with transaccion() as c:
+        for red, seg, base, cada, er in MIAS:
+            cid = c.execute("INSERT INTO cuentas(red,usuario,mia,nombre,seguidores,ultimo,demo) VALUES(?,?,1,?,?,?,1)",
+                            (red, MIA, "Tu cuenta (demo)", seg, ultimo)).lastrowid
+            saltos, filas_m = [], []
+            k, edad_d = 0, rnd.uniform(0.3, 1.5)
+            while edad_d < DIAS_HISTORIA - 5:
+                # vas a mejor: los vídeos recientes rinden algo más que los de hace tres meses
+                tendencia = 1 + 0.45 * (1 - edad_d / DIAS_HISTORIA)
+                mult = rnd.choice([0.45, 0.6, 0.75, 0.9, 1, 1, 1.1, 1.3, 1.6, 2.2]) if k % 11 != 1 else rnd.choice([5.5, 8.5])
+                final = int(base * tendencia * mult * rnd.uniform(0.9, 1.1))
+                if mult > 4:
+                    saltos += [int(edad_d), int(edad_d) - 1]
+                tema = TEMAS[(k + n) % len(TEMAS)]
+                pub = ahora - timedelta(days=edad_d)
+                vid = f"demo{cid}_{k}"
+                v_id = c.execute("INSERT INTO videos(cuenta_id,red,vid,url,texto,portada,publicado,duracion) "
+                                 "VALUES(?,?,?,?,?,?,?,?)",
+                                 (cid, red, vid, f"https://example.com/demo/{vid}", tema + ". Comenta GUIA y te la mando.",
+                                  portada(tema, k + n), pub.isoformat(timespec="seconds"), rnd.randint(22, 65))).lastrowid
+                v_er = er * rnd.uniform(0.75, 1.3) * (1.15 if mult > 1.5 else 1)
+                tau = rnd.uniform(1.2, 3.5)
+                # una foto por día desde que se publicó: así salen las vistas ganadas por día
+                for d in range(int(edad_d), -1, -1):
+                    t = edad_d - d + 0.6
+                    vistas = int(final * (1 - math.exp(-t / tau)))
+                    filas_m.append((v_id, (hoy - timedelta(days=d)).isoformat(), vistas,
+                                    *_metricas(vistas, v_er, rnd), int(vistas * .8)))
+                k += 1
+                n += 1
+                edad_d += cada * rnd.uniform(0.6, 1.4)
+            c.executemany("INSERT OR REPLACE INTO metricas VALUES(?,?,?,?,?,?,?,?)", filas_m)
+            _seguidores(c, cid, seg, 0.0028, rnd, saltos)
+        for red, u, seg, base, por_semana, er, ritmo in COMPETENCIA:
+            cid = c.execute("INSERT INTO cuentas(red,usuario,mia,nombre,seguidores,ultimo,demo) VALUES(?,?,0,?,?,?,1)",
+                            (red, u, u.replace("_demo", "").replace("_", " ").capitalize() + " (demo)", seg,
+                             ultimo)).lastrowid
+            filas_m, k, edad_d = [], 0, rnd.uniform(0.2, 2)
+            while edad_d < 95:
+                mult = rnd.choice([0.4, 0.55, 0.7, 0.85, 1, 1, 1.15, 1.4, 1.8, 2.6]) if k % 9 != 4 else rnd.choice([4.5, 7])
+                vistas = int(base * mult * rnd.uniform(0.9, 1.1))
+                tema = rnd.choice(TEMAS).replace("mi ", "tu ").replace("Mi ", "Tu ")
+                vid = f"demo{cid}_{k}"
+                v_id = c.execute("INSERT INTO videos(cuenta_id,red,vid,url,texto,portada,publicado,duracion) "
+                                 "VALUES(?,?,?,?,?,?,?,?)",
+                                 (cid, red, vid, f"https://example.com/demo/{vid}", tema, portada(tema, n),
+                                  (ahora - timedelta(days=edad_d)).isoformat(timespec="seconds"),
+                                  rnd.randint(18, 75))).lastrowid
+                v_er = er * rnd.uniform(0.7, 1.35) * (1.2 if mult > 2 else 1)
+                filas_m.append((v_id, hoy.isoformat(), vistas, *_metricas(vistas, v_er, rnd), int(vistas * .8)))
+                k += 1
+                n += 1
+                edad_d += 7 / por_semana * rnd.uniform(0.5, 1.5)
+            c.executemany("INSERT OR REPLACE INTO metricas VALUES(?,?,?,?,?,?,?,?)", filas_m)
+            _seguidores(c, cid, seg, ritmo, rnd)
     mios = q("SELECT v.id, v.red FROM videos v JOIN cuentas c ON c.id=v.cuenta_id WHERE c.mia=1 ORDER BY v.publicado DESC LIMIT 4")
     coms = [("cliente", "Tengo una clínica y perdemos horas con las citas, ¿me lo montarías?", "Claro, escríbeme por privado y me cuentas cómo las gestionáis ahora."),
             ("pregunta", "¿Funciona también con Outlook o solo con Gmail?", "Con Outlook también: se conecta igual desde la misma herramienta."),

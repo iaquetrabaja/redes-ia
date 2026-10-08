@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set c = f.c %}{% set s = f.s %}
+{% block title %}@{{ c.usuario }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="meta"><a href="{{ B }}/competencia?dias={{ dias }}">← Competencia</a></p>
+    <h1>@{{ c.usuario }} {% if c.mia %}<span class="badge accent">Tú</span>{% else %}<span class="badge">Competencia</span>{% endif %}</h1>
+    <p>{{ c.nombre or '' }}{% if c.nombre %} · {% endif %}{{ REDES.get(c.red, c.red) }} · última lectura: {{ c.ultimo or 'todavía no' }}</p></div>
+  <div class="row" style="align-items:center">
+    <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
+    <form class="inline" method="post" action="{{ B }}/competencia/cuenta/{{ c.id }}/borrar" onsubmit="return confirm('¿Quitar @{{ c.usuario }} y sus datos?')"><button class="btn secondary">Quitar</button></form>
+  </div>
+</div>
+{% if c.error %}<div class="sys-alert mb-l"><b>Última lectura con error:</b> {{ c.error }}</div>{% endif %}
+
+<div class="grid g3 kpis mb-l">
+  <div class="card stat"><div class="label">Seguidores</div><div class="value">{{ s.seguidores|miles }}</div>
+    <div class="delta">{% if s.ganados is none %}<span class="muted">—</span>{% else %}<span class="{{ 'up' if s.ganados > 0 else ('down' if s.ganados < 0) }}">{{ '↑ +' if s.ganados > 0 else ('↓ ' if s.ganados < 0) }}{{ s.ganados|miles }}{% if s.crecimiento is not none %} ({{ s.crecimiento|dec }} %){% endif %}</span>{% endif %} <span class="muted">en {{ dias }} días</span></div></div>
+  <div class="card stat"><div class="label">Vídeos en {{ dias }} días</div><div class="value">{{ s.n }}</div>
+    <div class="delta">{{ s.frecuencia|dec if s.frecuencia is not none else '—' }} por semana</div></div>
+  <div class="card stat"><div class="label">Mediana de vistas</div><div class="value">{{ s.mediana|miles }}</div>
+    <div class="delta">de todos sus vídeos guardados: {{ f.mediana_total|miles }}</div></div>
+  <div class="card stat"><div class="label">Engagement medio</div><div class="value">{% if s.engagement is not none %}{{ s.engagement|dec }} %{% else %}—{% endif %}</div>
+    <div class="delta">(me gusta + comentarios + compartidos + guardados) / vistas</div></div>
+  <div class="card stat"><div class="label">Vídeos de más de ×2 su mediana</div><div class="value">{{ s.sobre2 }}</div>
+    <div class="delta">en {{ dias }} días</div></div>
+  <div class="card stat"><div class="label">Mejor vídeo del periodo</div>
+    {% if s.mejor %}<div class="value">{{ s.mejor.vistas|miles }}</div><div class="delta"><a href="{{ s.mejor.url }}" target="_blank" rel="noopener noreferrer">{{ (s.mejor.texto or '')[:50] }}</a></div>
+    {% else %}<div class="value na">Sin vídeos en el periodo</div>{% endif %}</div>
+</div>
+
+<div class="card mb-l">
+  <div class="section-head"><h2>Seguidores</h2><small>un dato por cada día que se actualizó</small></div>
+  <div class="chart-box"><canvas data-grafica="seguidores" data-tipo="lineas"></canvas></div>
+  <p class="hint grafica-vacia" hidden>Todavía hay un solo dato. Cada actualización diaria añade un punto: en unos días verás la curva.</p>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>{{ 'Tus' if c.mia else 'Sus' }} vídeos que funcionan</h2><small>los que superan ×1,5 {{ 'tu' if c.mia else 'su' }} mediana de vistas</small></div>
+  {% if f.funcionan %}<div class="posts">{% for v in f.funcionan %}
+    <a class="post" href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
+      <div class="cover">{% if v.portada %}<img src="{{ v.portada }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">{% endif %}
+        <span class="badge solid">x{{ v.multiplo|dec }} {{ 'tu' if c.mia else 'su' }} media</span></div>
+      <div class="cap">{{ (v.texto or '(sin texto)')[:110] }}</div>
+      <div class="nums"><span>{{ v.vistas|miles }} vistas</span>{% if v.er is not none %}<span class="muted">{{ v.er|dec }} % eng.</span>{% endif %}</div>
+    </a>{% endfor %}</div>
+  {% else %}<div class="empty">Ninguno destaca todavía sobre su mediana.</div>{% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Todos {{ 'tus' if c.mia else 'sus' }} vídeos</h2><small>{{ f.videos|length }} guardados</small></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th></th><th>Vídeo</th><th class="r">Vistas</th><th class="r">× {{ 'tu' if c.mia else 'su' }} media</th><th class="r">Engagement</th><th class="r">Fecha</th></tr></thead>
+    <tbody>{% for v in f.videos[:40] %}
+      <tr><td style="width:52px">{% if v.portada %}<img class="thumb-sm" src="{{ v.portada }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">{% endif %}</td>
+        <td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ (v.texto or '(sin texto)')[:90] }}</a></td>
+        <td class="r num">{{ v.vistas|miles }}</td>
+        <td class="r num">{% if v.multiplo %}<span class="{{ 'up' if v.multiplo >= 1.5 else ('down' if v.multiplo < 0.7) }}">x{{ v.multiplo|dec }}</span>{% else %}—{% endif %}</td>
+        <td class="r num">{% if v.er is not none %}{{ v.er|dec }} %{% else %}—{% endif %}</td>
+        <td class="r nowrap"><small>{{ (v.publicado or '')[:10] or '—' }}</small></td></tr>
+    {% else %}<tr><td colspan="6" class="muted">Aún no hay vídeos guardados de esta cuenta. Pulsa «Actualizar datos» en Resumen o Competencia.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if f.videos|length > 40 %}<p class="hint mt">Se enseñan los 40 más recientes de {{ f.videos|length }}.</p>{% endif %}
+</div>
+<script type="application/json" id="datos-grafica">{{ f.grafica|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="{{ B }}/static/vendor/chart.umd.min.js"></script>
+<script src="{{ B }}/static/js/graficas.js?v={{ version }}"></script>{% endblock %}

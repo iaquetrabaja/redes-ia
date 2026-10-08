@@ -11,7 +11,8 @@ nadie: tus datos se quedan en tu ordenador.
 
 | | |
 |---|---|
-| **Resumen** | Tus vistas, me gusta, comentarios, compartidos, guardados y seguidores en 3, 7, 30 o 90 días, comparados con el periodo anterior. |
+| **Resumen** | Seguidores, vistas, media por vídeo, **engagement**, me gusta, comentarios, compartidos y guardados en 3, 7, 30 o 90 días con ↑↓ frente al periodo anterior; tabla por plataforma, vistas ganadas por día, seguidores por red y tus mejores vídeos con portada. |
+| **Competencia** | Tus cuentas y las que vigilas por red (TikTok, Instagram, YouTube): seguidores y su variación, vídeos por semana, mediana de vistas, engagement, mejor vídeo y vídeos de más de ×2 su mediana. Ficha de cada cuenta y comparativa **«Tú contra tu competencia»** con barras y una frase con qué mejorar primero. |
 | **Ideas** | Busca los vídeos de tu competencia que **superan la media de su propia cuenta** (no las vistas brutas), tus vídeos que mejor funcionan, las tendencias de tu nicho (GitHub, Hacker News, Reddit) y lo que te preguntan en comentarios. Te propone ideas con nota del 0 al 10 y no repite las que ya tienes. |
 | **Preparar guion** | Para cada idea: 3 ganchos **puntuados** con 26 fórmulas, el guion con tiempos frase a frase, el texto de Instagram y la descripción de TikTok revisados. Y lo corrige solo con los avisos de las herramientas hasta dos veces. |
 | **Automatizaciones** | Cada lunes, 3 ideas de vídeo sobre automatizaciones con IA para trabajadores corrientes, fáciles de montar y con el guion por escenas. |
@@ -19,8 +20,10 @@ nadie: tus datos se quedan en tu ordenador.
 | **Herramientas** | Puntuar ganchos, cronometrar un guion, revisar el texto del post, humanizar textos de IA y ranking viral. Sin IA y sin internet. |
 | **Claude y Cursor** | Un servidor **MCP** y una **skill** en español para usarlo todo desde Claude Desktop, Claude Code, Cursor o cualquier cliente MCP. |
 
-| Guion listo para grabar | Estudio: auditoría |
+| Resumen | Competencia |
 |---|---|
+| ![Resumen](docs/img/01-resumen.png) | ![Competencia](docs/img/15-competencia.png) |
+| **Guion listo para grabar** | **Estudio: auditoría** |
 | ![Guion](docs/img/03-guion.png) | ![Auditoría](docs/img/05-auditoria.png) |
 
 ## Instalación en 3 pasos
@@ -49,8 +52,10 @@ La guía paso a paso, con capturas, para quien no ha instalado nunca nada: **[do
 
 ## Conectar tus redes
 
-- **TikTok**: solo tu @ y los de tu competencia. Se leen los datos públicos sin contraseña (tus ~10 últimos vídeos,
-  sus vistas y, en los tuyos, me gusta, compartidos, guardados y comentarios).
+- **TikTok**: solo tu @ y los de tu competencia, en **Competencia**. Pulsa **«Comprobar»** y verás al momento tu
+  nombre, seguidores y últimos vídeos, o qué falla y qué hacer (@ mal escrito, cuenta privada, sin vídeos públicos,
+  TikTok frenando). Se leen los datos públicos **sin contraseña**: los ~10 últimos vídeos de cada cuenta con sus vistas
+  y, en los tuyos, me gusta, compartidos, guardados y comentarios.
 - **Instagram**: tu cuenta profesional con la **API oficial** de Instagram (token que se renueva solo). La guía lo
   explica pantalla a pantalla. La competencia de Instagram, a mano o por CSV (Instagram no da datos de cuentas ajenas
   con ese token; si tienes token de Facebook, también por Business Discovery).

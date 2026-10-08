@@ -1,61 +1,125 @@
 {% extends "base.html" %}
 {% block title %}Resumen{% endblock %}
+{% macro cambio(c) %}{% if c is none %}<span class="muted">—</span>{% elif c > 0 %}<span class="up">↑ {{ c }} %</span>{% elif c < 0 %}<span class="down">↓ {{ -c }} %</span>{% else %}<span class="muted">= igual</span>{% endif %}{% endmacro %}
+{% macro kpi(etiqueta, valor, c, suf='', hay=True) %}
+<div class="card stat"><div class="label">{{ etiqueta }}</div>
+  {% if hay and valor is not none %}<div class="value">{% if suf %}{{ valor|dec }}{{ suf }}{% else %}{{ valor|miles }}{% endif %}</div>
+  <div class="delta">{{ cambio(c) }}</div>
+  {% else %}<div class="value na">No disponible</div>{% endif %}
+</div>
+{% endmacro %}
 {% block content %}
+{% set qs = '&red=' ~ red if red else '' %}
 <div class="page-head">
-  <div><h1>Resumen</h1><p>Tus vídeos publicados en los últimos {{ dias }} días, comparados con los {{ dias }} anteriores.</p></div>
+  <div><h1>{{ REDES[red] if red else 'Resumen' }}</h1><p>Tus cuentas · vídeos publicados en los últimos {{ dias }} días comparados con los {{ dias }} anteriores.</p></div>
   <div class="row" style="align-items:center">
     <div class="seg">
       <a href="?dias={{ dias }}" class="{{ 'on' if not red }}">Todo</a>
-      {% for k, l in REDES.items() %}<a href="?dias={{ dias }}&red={{ k }}" class="{{ 'on' if red == k }}">{{ l }}</a>{% endfor %}
+      {% for k, l in REDES.items() %}<a href="?dias={{ dias }}&red={{ k }}" class="{{ 'on' if red == k }}">{{ l.replace(' Shorts', '') }}</a>{% endfor %}
     </div>
-    <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}{% if red %}&red={{ red }}{% endif %}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
+    <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}{{ qs }}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
     <form method="post" action="{{ B }}/actualizar"><button class="btn secondary">Actualizar datos</button></form>
   </div>
 </div>
 
 {% if not hay_cuentas %}
-<div class="empty mb-l">Aún no has añadido tu cuenta. Ve a <a href="{{ B }}/ajustes?tab=redes">Ajustes → Redes</a> y pon tu usuario de TikTok (y, si quieres, conecta Instagram).</div>
+<div class="empty mb-l">Aún no has añadido tu cuenta. Ve a <a href="{{ B }}/competencia">Competencia</a>, escribe tu @ de TikTok, pulsa «Comprobar» y marca «Es mi cuenta».</div>
 {% endif %}
+{% for s in r.seguidores if s.error %}
+<div class="sys-alert mb"><b>@{{ s.usuario }} en {{ REDES.get(s.red, s.red) }}:</b> {{ s.error[:200] }} <a href="{{ B }}/competencia">Comprobar la cuenta</a></div>
+{% endfor %}
 
-<div class="grid g5 kpis mb-l">
-  {% for k, l in (("vistas","Vistas"),("likes","Me gusta"),("comentarios","Comentarios"),("compartidos","Compartidos"),("guardados","Guardados")) %}
-  {% set x = r.kpis[k] %}
-  <div class="card stat"><div class="label">{{ l }}</div>
-    {% if x.hay %}<div class="value">{{ x.valor|miles }}</div>
-    <div class="delta">{% if x.cambio is not none %}<span class="{{ 'up' if x.cambio >= 0 else 'down' }}">{{ '+' if x.cambio >= 0 }}{{ x.cambio }}%</span> vs. antes{% else %}{{ r.kpis.publicaciones.valor }} vídeos{% endif %}</div>
-    {% else %}<div class="value na">No disponible</div>{% endif %}
-  </div>
-  {% endfor %}
+{% set k = r.k %}
+<div class="grid g4 kpis">
+  <div class="card stat"><div class="label">Seguidores</div>
+    <div class="value">{{ k.seguidores|miles }}</div>
+    <div class="delta">{% if k.ganados is none %}<span class="muted">—</span>{% elif k.ganados > 0 %}<span class="up">↑ +{{ k.ganados|miles }}</span>{% elif k.ganados < 0 %}<span class="down">↓ {{ k.ganados|miles }}</span>{% else %}<span class="muted">±0</span>{% endif %} <span class="muted">en {{ dias }} días</span></div></div>
+  {{ kpi("Vídeos publicados", k.act.publicaciones, k.cambio.publicaciones) }}
+  {{ kpi("Vistas", k.act.vistas, k.cambio.vistas) }}
+  {{ kpi("Media por vídeo", k.act.media, k.cambio.media) }}
+</div>
+<div class="grid g5 kpis mt mb-l">
+  {{ kpi("Engagement medio", k.act.engagement, k.cambio.engagement, suf=' %', hay=r.hay.likes) }}
+  {{ kpi("Me gusta", k.act.likes, k.cambio.likes, hay=r.hay.likes) }}
+  {{ kpi("Comentarios", k.act.comentarios, k.cambio.comentarios, hay=r.hay.comentarios) }}
+  {{ kpi("Compartidos", k.act.compartidos, k.cambio.compartidos, hay=r.hay.compartidos) }}
+  {{ kpi("Guardados", k.act.guardados, k.cambio.guardados, hay=r.hay.guardados) }}
 </div>
 
-<div class="grid g2 mb-l">
+{% if r.por_red|length > 1 %}
+<div class="section">
+  <div class="section-head"><h2>Por plataforma</h2><small>últimos {{ dias }} días · ↑↓ frente a los {{ dias }} anteriores</small></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th></th>{% for rd in r.por_red %}<th class="r"><a href="?dias={{ dias }}&red={{ rd }}">{{ REDES[rd] }}</a></th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for clave, etiqueta in (("seguidores","Seguidores"),("publicaciones","Vídeos publicados"),("vistas","Vistas"),("media","Media por vídeo"),("engagement","Engagement medio"),("likes","Me gusta"),("comentarios","Comentarios"),("compartidos","Compartidos"),("guardados","Guardados")) %}
+      <tr><td>{{ etiqueta }}</td>
+      {% for rd, b in r.por_red.items() %}
+        {% if clave == 'seguidores' %}
+        <td class="r num">{{ b.seguidores|miles }}{% if b.ganados %}<small class="{{ 'up' if b.ganados > 0 else 'down' }}">{{ '+' if b.ganados > 0 }}{{ b.ganados|miles }}</small>{% endif %}</td>
+        {% else %}{% set v = b.act[clave] %}{% set c = b.cambio[clave] %}
+        <td class="r num">{% if v is none %}<span class="muted">—</span>{% else %}{% if clave == 'engagement' %}{{ v|dec }} %{% else %}{{ v|miles }}{% endif %}{% if c %}<small class="{{ 'up' if c > 0 else 'down' }}">{{ '↑' if c > 0 else '↓' }} {{ c|abs }} %</small>{% endif %}{% endif %}</td>
+        {% endif %}
+      {% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<div class="section grid g2">
   <div class="card">
-    <div class="section-head"><h2>Seguidores</h2></div>
-    {% for s in r.seguidores %}
-    <div class="row mb" style="justify-content:space-between;align-items:center">
-      <div><b>{{ REDES.get(s.red, s.red) }}</b> <span class="muted">@{{ s.usuario }}</span>{% if s.error %}<br><small class="chk FAIL">{{ s.error[:120] }}</small>{% endif %}</div>
-      <div class="num"><b>{{ s.seguidores|miles }}</b>{% if s.ganados is not none %} <small class="{{ 'up' if s.ganados >= 0 else 'down' }}">{{ '+' if s.ganados >= 0 }}{{ s.ganados|miles }}</small>{% endif %}</div>
-    </div>
-    {% if s.serie|length > 1 %}{% set mx = s.serie|map(attribute='seguidores')|max %}{% set mn = s.serie|map(attribute='seguidores')|min %}
-    <div class="mini-chart mb">{% for p in s.serie %}<i style="height:{{ 8 + (92 * (p.seguidores - mn) / ((mx - mn) or 1))|round }}%" title="{{ p.fecha }}: {{ p.seguidores }}"></i>{% endfor %}</div>{% endif %}
-    {% else %}<p class="muted">Sin cuentas propias todavía.</p>{% endfor %}
+    <div class="section-head"><h2>Vistas ganadas por día</h2><small>todos tus vídeos</small></div>
+    <div class="chart-box"><canvas data-grafica="ganadas" data-tipo="barras"></canvas></div>
+    <p class="hint grafica-vacia" hidden>Hacen falta al menos dos días de datos: cada actualización guarda una foto de tus vistas.</p>
   </div>
   <div class="card">
-    <div class="section-head"><h2>Últimas tareas</h2><a class="hint" href="{{ B }}/ajustes?tab=general">Programación</a></div>
-    {% for t in tareas %}<p class="mb-s"><span class="chk {{ 'PASS' if t.estado == 'ok' else ('FAIL' if t.estado == 'error' else 'WARN') }}">{{ t.estado }}</span> <b>{{ t.tipo }}</b> <small class="muted">{{ (t.inicio or '')[:16] }}</small><br><small class="muted">{{ (t.detalle or '')[:140] }}</small></p>
-    {% else %}<p class="muted">Todavía no se ha ejecutado nada.</p>{% endfor %}
+    <div class="section-head"><h2>Tus seguidores</h2><small>por red</small></div>
+    <div class="chart-box"><canvas data-grafica="seguidores" data-tipo="lineas"></canvas></div>
+    <p class="hint grafica-vacia" hidden>Se guarda el número de seguidores cada día que se actualiza; mañana ya verás la línea.</p>
   </div>
+</div>
+
+{% if cp.conclusion %}
+<div class="section card conclusion">
+  <div class="section-head"><h2>Tú contra tu competencia</h2><a class="meta" href="{{ B }}/competencia?dias={{ dias }}&red={{ cp.red }}">Ver la comparativa</a></div>
+  <p>{{ cp.conclusion }}</p>
+</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-head"><h2>Lo que mejor te funciona</h2><small>los vídeos con más vistas del periodo</small></div>
+  {% if r.mejores %}<div class="posts">{% for v in r.mejores %}
+    <a class="post" href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
+      <div class="cover">{% if v.portada %}<img src="{{ v.portada }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">{% endif %}
+        {% if v.multiplo %}<span class="badge {{ 'solid' if v.multiplo >= 2 else '' }}">x{{ v.multiplo|dec }} tu media</span>{% endif %}</div>
+      <div class="cap">{{ (v.texto or '(sin texto)')[:110] }}</div>
+      <div class="nums"><span>{{ v.vistas|miles }} vistas</span>{% if v.er is not none %}<span class="muted">{{ v.er|dec }} % eng.</span>{% endif %}</div>
+      <small class="muted">{{ REDES.get(v.red, v.red) }} · {{ (v.publicado or '')[:10] }}</small>
+    </a>{% endfor %}</div>
+  {% else %}<div class="empty">Sin vídeos todavía. Pulsa «Actualizar datos».</div>{% endif %}
 </div>
 
 <div class="section">
-  <div class="section-head"><h2>Tus vídeos del periodo</h2><span class="muted">ordenados por vistas</span></div>
+  <div class="section-head"><h2>Tus vídeos del periodo</h2><small>del más reciente al más antiguo</small></div>
   <div class="table-wrap"><table class="table">
-    <thead><tr><th>Vídeo</th><th class="r">Vistas</th><th class="r">× tu media</th><th class="r">Me gusta</th><th class="r">Compartidos</th><th class="r">Guardados</th></tr></thead>
-    <tbody>{% for v in r.top %}
+    <thead><tr><th>Vídeo</th><th class="r">Vistas</th><th class="r">× tu media</th><th class="r">Engagement</th><th class="r">Me gusta</th><th class="r">Compartidos</th><th class="r">Guardados</th></tr></thead>
+    <tbody>{% for v in r.tabla %}
       <tr><td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ (v.texto or '(sin texto)')[:80] }}</a><br><small class="muted">{{ REDES.get(v.red, v.red) }} · {{ (v.publicado or '')[:10] }}</small></td>
-      <td class="r num">{{ v.vistas|miles }}</td><td class="r num">{% if v.multiplo %}x{{ v.multiplo }}{% else %}—{% endif %}</td>
+      <td class="r num">{{ v.vistas|miles }}</td>
+      <td class="r num">{% if v.multiplo %}<span class="{{ 'up' if v.multiplo >= 1.5 else ('down' if v.multiplo < 0.7) }}">x{{ v.multiplo|dec }}</span>{% else %}—{% endif %}</td>
+      <td class="r num">{% if v.er is not none %}{{ v.er|dec }} %{% else %}—{% endif %}</td>
       <td class="r num">{{ v.likes|miles }}</td><td class="r num">{{ v.compartidos|miles }}</td><td class="r num">{{ v.guardados|miles }}</td></tr>
-    {% else %}<tr><td colspan="6" class="muted">Sin vídeos en este periodo.</td></tr>{% endfor %}</tbody>
+    {% else %}<tr><td colspan="7" class="muted">Sin vídeos publicados en este periodo.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div>
+
+<div class="section">
+  <div class="section-head"><h2>Últimas tareas</h2><a class="meta" href="{{ B }}/ajustes?tab=general">Programación</a></div>
+  {% for t in tareas %}<p class="mb-s"><span class="chk {{ 'PASS' if t.estado == 'ok' else ('FAIL' if t.estado == 'error' else 'WARN') }}">{{ t.estado }}</span> <b>{{ t.tipo }}</b> <small class="muted">{{ (t.inicio or '')[:16] }} · {{ (t.detalle or '')[:140] }}</small></p>
+  {% else %}<p class="muted">Todavía no se ha ejecutado nada.</p>{% endfor %}
+</div>
+<script type="application/json" id="datos-grafica">{{ r.grafica|tojson }}</script>
 {% endblock %}
+{% block scripts %}<script src="{{ B }}/static/vendor/chart.umd.min.js"></script>
+<script src="{{ B }}/static/js/graficas.js?v={{ version }}"></script>{% endblock %}
