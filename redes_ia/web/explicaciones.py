@@ -110,6 +110,18 @@ EXPLICACIONES: dict[str, tuple[str, list[str]]] = {
         "vídeo. La usan las ideas, los guiones y los borradores de respuesta para que todo suene a ti y no a una IA.",
         "Puedes escribirla a mano o pulsar «Escribirla a partir de mis vídeos» y corregirla.",
     ]),
+    "miniaturas": ("Portadas con tu cara, sin abrir un editor", [
+        "Escribes de qué va el vídeo y la IA hace dos cosas: propone el **texto** de la miniatura (corto, que se "
+        "entienda sin ver el vídeo) y crea la **imagen** con tu cara, en el estilo que elijas.",
+        "- **Tus fotos**: sube de 3 a 10, de frente y de lado, con buena luz. La IA las usa solo para reconocerte. En "
+        "cada versión mezcla fotos distintas y cambia el gesto, el ángulo y la ropa, así **no sales siempre igual**.",
+        "- **Estilos**: Impacto (texto enorme, tipo YouTube), Estudio (retrato limpio), Editorial (tipo revista), "
+        "Escena real (en un sitio relacionado con el tema) y Objeto (la pantalla o el objeto clave del vídeo).",
+        "- **Formato**: vertical para TikTok, Reels y Shorts; horizontal para YouTube; o los dos.",
+        "- **Texto fijo**: si ya tienes el gancho, escríbelo y todas lo llevan.",
+        "Las imágenes se crean con **Gemini, OpenAI u OpenRouter** (se elige en Ajustes → IA → Imágenes). No es "
+        "gratis en ninguno: cuesta unos céntimos por miniatura. Tus fotos y tus miniaturas se quedan en tu ordenador.",
+    ]),
     "herramientas.gancho": ("Puntuar ganchos", [
         "Pega varias primeras frases (una por línea) y te las ordena de mejor a peor con una nota de 0 a 100. Mira "
         "cinco cosas: que sea corta, que tenga algo concreto (una cifra, un nombre), que cree tensión, que lo "

@@ -392,3 +392,24 @@ details.explica b { color: var(--text); font-weight: 600; }
 .barra .cifra { min-width: 64px; text-align: right; }
 .post .cover .badge { background: var(--surface); }
 .post .cover .badge.solid { background: var(--text); color: var(--bg); }
+
+/* Miniaturas */
+.mt-l { margin-top: 28px; }
+.caras { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.cara { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.cara.principal { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cara img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.cara-acc { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; justify-content: center; }
+.cara-acc .btn { padding: 2px 6px; font-size: 12px; }
+.minis { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.mini { margin: 0; width: 200px; }
+.mini.h { width: 340px; }
+.mini img, .mini-vacia { width: 100%; display: block; border-radius: 8px; border: 1px solid var(--border); }
+.mini.v img, .mini.v .mini-vacia { aspect-ratio: 9 / 16; object-fit: cover; }
+.mini.h img, .mini.h .mini-vacia { aspect-ratio: 16 / 9; object-fit: cover; }
+.mini-vacia { display: grid; place-items: center; text-align: center; padding: 10px; font-size: 13px; color: var(--text-2); background: var(--muted-bg); }
+.mini-vacia.err { color: var(--bad); }
+.mini figcaption { font-size: 13px; margin-top: 6px; display: grid; gap: 4px; }
+.mini figcaption small { color: var(--text-2); }
+.mini figcaption .row { gap: 6px; }
+@media (max-width: 560px) { .mini { width: calc(50% - 7px); } .mini.h { width: 100%; } }

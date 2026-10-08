@@ -23,6 +23,20 @@
   <div class="field"><label>Dirección de Ollama (solo si usas Ollama)</label><input type="text" name="ollama_url" value="{{ cfg('ollama_url') }}"></div>
   <div class="row"><button class="btn">Guardar</button><button class="btn secondary" name="probar" value="1">Guardar y probar conexión</button></div>
 </form>
+<form method="post" action="{{ B }}/ajustes/imagen" class="card mt" id="imagenes">
+  <h2 class="mb">Imágenes (para las Miniaturas)</h2>
+  <p class="hint mb">Crear imágenes no es gratis en ningún proveedor: cuesta unos céntimos por miniatura y suele pedir tener la facturación activada. Si ya pusiste arriba la clave de ese proveedor, no hace falta repetirla.</p>
+  <div class="opciones">
+    {% for k, p in img.proveedores.items() %}
+    <label class="opcion"><input type="radio" name="img_proveedor" value="{{ k }}" {{ 'checked' if img.actual == k or (not img.actual and k == 'gemini') }}>
+      <span><b>{{ p.nombre }}</b>{% if claves.get(k) %} <span class="badge">clave guardada {{ claves[k] }}</span>{% endif %}
+      <small>Modelo recomendado: <code>{{ p.defecto }}</code></small></span></label>
+    {% endfor %}
+  </div>
+  <div class="field"><label>Clave (solo si es distinta o no la has puesto)</label><input type="password" name="clave" placeholder="Déjala vacía para usar la guardada" autocomplete="off"></div>
+  <div class="field"><label>Modelo de imagen</label><input type="text" name="img_modelo" value="{{ img.modelo }}" placeholder="Vacío = el recomendado"></div>
+  <button class="btn">Guardar</button>
+</form>
 <p class="hint mt">Qué se envía a la IA: el texto de tus vídeos y los de tu competencia, tus comentarios y tu «voz», para generar ideas y guiones. Nada más. Tus claves no salen de tu ordenador salvo hacia el propio proveedor.</p>
 
 {% elif tab == "redes" %}

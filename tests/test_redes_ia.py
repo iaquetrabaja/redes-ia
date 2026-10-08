@@ -266,6 +266,67 @@ class TestGuion(unittest.TestCase):
         self.assertFalse(ideas.parecida("Un agente que ordena tu correo", ["Facturas a Excel con una foto"]))
 
 
+def _png(color=(200, 120, 90), size=(64, 64)) -> bytes:
+    import io
+    from PIL import Image
+    b = io.BytesIO()
+    Image.new("RGB", size, color).save(b, "PNG")
+    return b.getvalue()
+
+
+class TestMiniaturas(unittest.TestCase):
+    def test_caras_y_encargo_completo(self):
+        from redes_ia.servicios import miniaturas as M
+        for c in (1, 2, 3, 4):
+            M.guardar_cara(_png((c * 40, 90, 90)))
+        self.assertEqual(q("SELECT COUNT(*) n FROM caras", one=True)["n"], 4)
+        self.assertEqual(q("SELECT COUNT(*) n FROM caras WHERE principal=1", one=True)["n"], 1)
+        A.set("clave_gemini", "AIza-prueba")
+        A.set("img_proveedor", "gemini")
+        conceptos = {"miniaturas": [{"texto": "FACTURAS A EXCEL CON UNA FOTO", "destacar": "FOTO", "escena": "desk",
+                                     "expresion": "surprised", "por_que": "Tema y beneficio claros"},
+                                    {"texto": "ADIÓS A PASAR TICKETS A MANO", "escena": "office", "expresion": "smile"}]}
+        refs_vistos, prompts = [], []
+
+        def imagen(prompt, refs, formato):
+            refs_vistos.append(len(refs))
+            prompts.append(prompt)
+            return _png(size=(90, 160) if formato == "9:16" else (160, 90))
+        enc = M.crear_encargo("Paso tickets a Excel con una foto", "impacto", "ambos", 2)
+        with mock.patch("redes_ia.servicios.miniaturas.llm.generar_json", return_value=conceptos),                 mock.patch("redes_ia.servicios.miniaturas.generar_imagen", side_effect=imagen):
+            self.assertEqual(M.generar(enc), 4)
+        filas = q("SELECT * FROM miniaturas WHERE encargo=?", (enc,))
+        self.assertTrue(all(f["estado"] == "ok" and f["archivo"] for f in filas))
+        self.assertEqual({f["texto"] for f in filas}, {"FACTURAS A EXCEL CON UNA FOTO", "ADIÓS A PASAR TICKETS A MANO"})
+        self.assertEqual(refs_vistos, [3, 3, 3, 3])             # principal + 2 al azar en cada una
+        self.assertTrue(all("Do NOT copy the pose" in p for p in prompts))
+        from PIL import Image
+        for f in filas:
+            tam = Image.open(M.MINIS / f["archivo"]).size
+            self.assertEqual(tam, M.TAMANO[f["formato"]])
+
+    def test_sin_clave_de_imagen_avisa(self):
+        from redes_ia.servicios import miniaturas as M
+        with mock.patch("redes_ia.servicios.miniaturas.A.tiene", return_value=False):
+            self.assertEqual(M.proveedor_imagen(), "")
+            with self.assertRaises(M.ErrorMiniatura):
+                M.generar_imagen("x", [], "9:16")
+
+    def test_gemini_imagen_peticion(self):
+        import base64
+        from redes_ia.servicios import miniaturas as M
+        A.set("clave_gemini", "AIza-prueba")
+        A.set("img_proveedor", "gemini")
+        A.set("img_modelo", "")
+        cuerpo = {"candidates": [{"content": {"parts": [{"inlineData": {"data": base64.b64encode(b"IMG").decode()}}]}}]}
+        with mock.patch("redes_ia.llm.httpx.post", return_value=Resp(cuerpo)) as post:
+            self.assertEqual(M.generar_imagen("prompt", [_png()], "9:16"), b"IMG")
+        url = post.call_args[0][0]
+        self.assertIn("gemini-2.5-flash-image:generateContent", url)
+        body = post.call_args[1]["json"]
+        self.assertEqual(body["generationConfig"]["imageConfig"]["aspectRatio"], "9:16")
+
+
 class TestRutasDemo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -280,7 +341,7 @@ class TestRutasDemo(unittest.TestCase):
                   "/competencia?dias=90&red=instagram", "/competencia?dias=3&red=youtube", "/ideas", "/ideas?estado=todas&orden=nota", "/automatizaciones",
                   "/estudio", "/estudio?tab=comentarios", "/estudio?tab=plan", "/estudio?tab=voz", "/herramientas",
                   "/herramientas?h=ritmo", "/ajustes", "/ajustes?tab=redes", "/ajustes?tab=general",
-                  "/ajustes?tab=claude", "/bienvenida", "/api/estado"]:
+                  "/ajustes?tab=claude", "/bienvenida", "/api/estado", "/miniaturas"]:
             r = self.c.get(u)
             self.assertEqual(r.status_code, 200, u)
             self.assertNotIn("Traceback", r.text, u)

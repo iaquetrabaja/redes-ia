@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -14,7 +14,7 @@ from .. import RAIZ, __version__
 from .. import ajustes as A
 from .. import llm, tareas
 from ..db import ex, iniciar, q
-from ..servicios import automatizaciones, datos, estudio, ideas, metricas
+from ..servicios import automatizaciones, datos, estudio, ideas, metricas, miniaturas
 
 AQUI = Path(__file__).parent
 app = FastAPI(title="Redes IA", version=__version__, docs_url=None, redoc_url=None)
@@ -383,6 +383,87 @@ def comentario_estado(request: Request, cid: str, estado: str = Form("hecho")):
     return ir(request.headers.get("referer") or "/estudio?tab=comentarios")
 
 
+# ---------------------------------------------------------------- miniaturas
+@app.get("/miniaturas", response_class=HTMLResponse)
+def ver_miniaturas(request: Request, idea: int = 0):
+    grupos = miniaturas.galeria()
+    pendiente = "miniaturas" in tareas.en_marcha() or any(f["estado"] == "pendiente" for g in grupos for f in g)
+    texto_idea = ""
+    if idea:
+        i = q("SELECT titulo, gancho, como FROM ideas WHERE id=?", (idea,), one=True)
+        if i:
+            texto_idea = "\n".join(x for x in (i["titulo"], i["gancho"] and "Gancho: " + i["gancho"], i["como"]) if x)
+    p = miniaturas.proveedor_imagen()
+    return ver(request, "miniaturas.html", grupos=grupos, pendiente=pendiente, estilos=miniaturas.ESTILOS,
+               caras=q("SELECT * FROM caras ORDER BY principal DESC, id DESC"), texto_idea=texto_idea,
+               img_prov=miniaturas.PROVEEDORES_IMAGEN[p]["nombre"] if p else "", img_modelo=miniaturas.modelo_imagen())
+
+
+def _archivo(carpeta: Path, nombre: str):
+    if not re.fullmatch(r"[0-9a-f]{12}\.jpg", nombre) or not (carpeta / nombre).is_file():
+        return JSONResponse({"error": "no encontrado"}, status_code=404)
+    return FileResponse(carpeta / nombre, headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.get("/miniaturas/img/{nombre}")
+def miniatura_img(nombre: str):
+    return _archivo(miniaturas.MINIS, nombre)
+
+
+@app.get("/miniaturas/cara/{nombre}")
+def miniatura_cara(nombre: str):
+    return _archivo(miniaturas.CARAS, nombre)
+
+
+@app.post("/miniaturas/caras")
+async def miniaturas_caras(fotos: list[UploadFile] = File(default=[])):
+    n = 0
+    for f in [x for x in fotos if x is not None and x.filename][:10]:
+        data = await f.read()
+        if len(data) > 15 * 1024 * 1024:
+            continue
+        try:
+            miniaturas.guardar_cara(data)
+            n += 1
+        except miniaturas.ErrorMiniatura as e:
+            return ir("/miniaturas#caras", err=str(e))
+    return ir("/miniaturas#caras", ok=f"{n} foto(s) añadidas" if n else None, err=None if n else "Elige alguna foto")
+
+
+@app.post("/miniaturas/caras/{cid}/principal")
+def miniaturas_cara_principal(cid: int):
+    ex("UPDATE caras SET principal=(id=?)", (cid,))
+    return ir("/miniaturas#caras", ok="Foto principal cambiada")
+
+
+@app.post("/miniaturas/caras/{cid}/borrar")
+def miniaturas_cara_borrar(cid: int):
+    miniaturas.borrar_cara(cid)
+    return ir("/miniaturas#caras", ok="Foto quitada")
+
+
+@app.post("/miniaturas/generar")
+def miniaturas_generar(idea: str = Form(""), estilo: str = Form("impacto"), formato: str = Form("9:16"),
+                       variantes: int = Form(2), texto: str = Form("")):
+    if (r := _necesita_ia("/miniaturas")):
+        return r
+    if not idea.strip():
+        return ir("/miniaturas", err="Escribe de qué va el vídeo")
+    if not miniaturas.proveedor_imagen():
+        return ir("/ajustes?tab=ia#imagenes", err="Para crear imágenes falta la clave de Gemini, OpenAI u OpenRouter.")
+    if "miniaturas" in tareas.en_marcha():
+        return ir("/miniaturas", err="Ya se están creando otras; espera a que terminen.")
+    encargo = miniaturas.crear_encargo(idea.strip(), estilo, formato, variantes, texto.strip())
+    tareas.ejecutar("miniaturas", miniaturas.generar, encargo)
+    return ir("/miniaturas#galeria", ok="Creando miniaturas… tarda 1-2 minutos y la página se actualiza sola.")
+
+
+@app.post("/miniaturas/{mid}/borrar")
+def miniaturas_borrar(mid: int):
+    miniaturas.borrar(mid)
+    return ir("/miniaturas#galeria", ok="Miniatura borrada")
+
+
 # ---------------------------------------------------------------- herramientas
 @app.get("/herramientas", response_class=HTMLResponse)
 def ver_herramientas(request: Request, h: str = "gancho"):
@@ -430,7 +511,9 @@ def ver_ajustes(request: Request, tab: str = "ia"):
     raiz = str(RAIZ).replace("\\", "/")
     mcp_cfg = {"mcpServers": {"redes-ia": {"command": py, "args": [f"{raiz}/mcp_redes.py"]}}}
     claves = {p: A.oculta(A.get(i["clave"])) if i["clave"] else "" for p, i in llm.PROVEEDORES.items()}
-    return ver(request, "ajustes.html", tab=tab, proveedores=llm.PROVEEDORES, actual=llm.proveedor(),
+    img = {"proveedores": miniaturas.PROVEEDORES_IMAGEN, "actual": A.get("img_proveedor") or miniaturas.proveedor_imagen(),
+           "modelo": A.get("img_modelo")}
+    return ver(request, "ajustes.html", tab=tab, proveedores=llm.PROVEEDORES, actual=llm.proveedor(), img=img,
                modelo=llm.modelo(), claves=claves, cuentas=q("SELECT * FROM cuentas ORDER BY mia DESC, red, usuario"),
                ig=A.oculta(A.get("ig_token")), fb=A.oculta(A.get("fb_token")), fb_ig_id=A.get("fb_ig_id"),
                cfg=lambda k: A.get(k), mcp_json=json.dumps(mcp_cfg, indent=2, ensure_ascii=False), py=py, raiz=raiz,
@@ -455,6 +538,17 @@ def ajustes_ia(proveedor: str = Form(...), clave: str = Form(""), modelo: str = 
         except Exception as e:  # noqa: BLE001
             return ir("/ajustes?tab=ia", err=str(e))
     return ir("/ajustes?tab=ia", ok="Guardado")
+
+
+@app.post("/ajustes/imagen")
+def ajustes_imagen(img_proveedor: str = Form(...), clave: str = Form(""), img_modelo: str = Form("")):
+    if img_proveedor not in miniaturas.PROVEEDORES_IMAGEN:
+        return ir("/ajustes?tab=ia#imagenes", err="Proveedor no válido")
+    if clave.strip():
+        A.set(miniaturas.PROVEEDORES_IMAGEN[img_proveedor]["clave"], clave.strip())
+    A.set("img_proveedor", img_proveedor)
+    A.set("img_modelo", img_modelo.strip()[:100])
+    return ir("/ajustes?tab=ia#imagenes", ok="Guardado")
 
 
 @app.get("/ajustes/modelos")

@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS ideas (
   estado TEXT DEFAULT 'nueva');
 CREATE TABLE IF NOT EXISTS tareas (
   id INTEGER PRIMARY KEY, tipo TEXT, inicio TEXT DEFAULT CURRENT_TIMESTAMP, fin TEXT, estado TEXT, detalle TEXT);
+CREATE TABLE IF NOT EXISTS caras (id INTEGER PRIMARY KEY, archivo TEXT NOT NULL, principal INTEGER DEFAULT 0,
+  creada TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS miniaturas (
+  id INTEGER PRIMARY KEY, encargo TEXT, variante INTEGER, estilo TEXT, formato TEXT, idea TEXT, texto TEXT, por_que TEXT,
+  archivo TEXT, estado TEXT DEFAULT 'pendiente', error TEXT, creada TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE INDEX IF NOT EXISTS idx_videos_cuenta ON videos(cuenta_id);
 CREATE INDEX IF NOT EXISTS idx_ideas_creada ON ideas(creada);
 """

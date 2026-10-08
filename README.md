@@ -17,6 +17,7 @@ nadie: tus datos se quedan en tu ordenador.
 | **Preparar guion** | Para cada idea: 3 ganchos **puntuados** con 26 fórmulas, el guion con tiempos frase a frase, el texto de Instagram y la descripción de TikTok revisados. Y lo corrige solo con los avisos de las herramientas hasta dos veces. |
 | **Automatizaciones** | Cada lunes, 3 ideas de vídeo sobre automatizaciones con IA para trabajadores corrientes, fáciles de montar y con el guion por escenas. |
 | **Estudio** | Auditoría de tus vídeos (múltiplo sobre tu media, compartidos y guardados por 1.000 vistas), comentarios clasificados con borrador de respuesta, plan de la semana y la «voz» de tu canal. |
+| **Miniaturas** | Portadas para TikTok, Reels y YouTube **con tu cara**: escribes de qué va el vídeo, la IA propone el texto y crea la imagen en 5 estilos. En cada versión cambia el gesto, el ángulo y la ropa para que no salgas siempre igual. Con Gemini, OpenAI u OpenRouter (céntimos por imagen). |
 | **Herramientas** | Puntuar ganchos, cronometrar un guion, revisar el texto del post, humanizar textos de IA y ranking viral. Sin IA y sin internet. |
 | **Claude y Cursor** | Un servidor **MCP** y una **skill** en español para usarlo todo desde Claude Desktop, Claude Code, Cursor o cualquier cliente MCP. |
 

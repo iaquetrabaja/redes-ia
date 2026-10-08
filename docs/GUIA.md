@@ -135,7 +135,7 @@ docker compose up -d     # y abre http://127.0.0.1:8765
 | OpenRouter | openrouter.ai/keys | Según el modelo; hay alguno gratuito |
 | Ollama | ollama.com/download (en tu ordenador) | 0 €; necesita un ordenador potente y descargar un modelo (`ollama pull llama3.1`) |
 
-Los costes son orientativos: dependen de cuántas ideas y guiones generes. Cada proveedor tiene un panel donde ves el
+Los costes son orientativos: dependen de cuántas ideas y guiones generes. Las **miniaturas** (imágenes) se pagan aparte: unos céntimos por imagen con Gemini, OpenAI u OpenRouter. Cada proveedor tiene un panel donde ves el
 gasto.
 
 Puedes cambiar de IA cuando quieras en **Ajustes → IA**. El botón **«Ver modelos disponibles»** muestra los modelos
@@ -365,6 +365,30 @@ Con lo que ahorra, con qué se monta, la dificultad, el momento «wow» de los 2
 
 ![Comentarios](img/06-comentarios.png)
 ![Plan](img/07-plan.png)
+
+### Miniaturas
+
+Portadas para tus vídeos con tu cara, sin abrir un editor.
+
+1. **Sube tus fotos** (de 3 a 10): de frente y de lado, con buena luz y sin gafas de sol. Marca una como
+   **principal** (la que más se parezca a como sales en tus vídeos). Se guardan solo en tu ordenador, en
+   `datos/caras`.
+2. **Escribe de qué va el vídeo**, o pulsa **«Miniatura»** en cualquier idea para traerla con su gancho.
+3. Elige **estilo** (Impacto, Estudio, Editorial, Escena real u Objeto), **formato** (vertical, horizontal o los dos)
+   y cuántas **versiones** quieres. Si ya tienes el texto, ponlo en **«Texto fijo»**.
+4. Pulsa **«Crear miniaturas»**. Tarda 1-2 minutos y la página se actualiza sola. Cada una se puede descargar o
+   borrar.
+
+Para que no salgas siempre igual, en cada versión se usa una mezcla distinta de tus fotos y se pide otro gesto, otro
+ángulo y otra ropa. Las fotos solo sirven para reconocerte, no para copiar la pose.
+
+**Qué IA crea las imágenes**: se elige en **Ajustes → IA → Imágenes**: Google Gemini (`gemini-2.5-flash-image`),
+OpenAI (`gpt-image-1`) u OpenRouter. **No es gratis en ninguno**: cuesta unos céntimos por imagen y normalmente hay
+que tener la facturación activada (en Gemini, en Google AI Studio → Facturación). El texto de la miniatura lo escribe
+la IA que ya tengas conectada, que sí puede ser la gratuita.
+
+![Miniaturas](img/17-miniaturas.png)
+![Galería de miniaturas](img/18-miniaturas-galeria.png)
 
 ### Herramientas
 

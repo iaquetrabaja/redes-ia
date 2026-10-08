@@ -13,7 +13,7 @@
   <aside class="side">
     <a class="brand" href="{{ B }}/">Redes IA<span>tu panel de contenido</span></a>
     <nav class="nav">
-      {% set items = [("/", "Resumen"), ("/competencia", "Competencia"), ("/ideas", "Ideas"), ("/automatizaciones", "Automatizaciones"), ("/estudio", "Estudio"), ("/herramientas", "Herramientas"), ("/ajustes", "Ajustes")] %}
+      {% set items = [("/", "Resumen"), ("/competencia", "Competencia"), ("/ideas", "Ideas"), ("/automatizaciones", "Automatizaciones"), ("/estudio", "Estudio"), ("/miniaturas", "Miniaturas"), ("/herramientas", "Herramientas"), ("/ajustes", "Ajustes")] %}
       {% for href, label in items %}
       <a href="{{ B }}{{ href }}" class="{{ 'on' if (ruta == href or (href != '/' and ruta.startswith(href))) }}">{{ label }}</a>
       {% endfor %}

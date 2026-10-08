@@ -10,7 +10,7 @@ from ..db import ex, q, transaccion
 from . import estudio
 
 # Cambia este número si cambian los datos de ejemplo: la demo se vuelve a generar sola al arrancar.
-VERSION = "4"
+VERSION = "5"
 MIA = "tu_cuenta_demo"
 # Tus cuentas: red, seguidores hoy, vistas de un vídeo típico, días entre vídeos, engagement base (%)
 MIAS = [("tiktok", 12480, 2600, 2.4, 9.5), ("instagram", 5230, 1700, 3.5, 8.0), ("youtube", 1940, 950, 4.5, 6.5)]
@@ -76,6 +76,7 @@ def _borrar_demo() -> None:
         if not q("SELECT 1 FROM cuentas WHERE demo=0", one=True):   # base solo de demo: fuera también lo demás
             for t in ("ideas", "tendencias", "comentarios", "tareas"):
                 c.execute(f"DELETE FROM {t}")
+        c.execute("DELETE FROM miniaturas WHERE archivo LIKE 'demo/%'")
 
 
 def _seguidores(c, cid: int, hoy_n: int, ritmo: float, rnd: random.Random, saltos=()) -> None:
@@ -249,3 +250,25 @@ def cargar(seed: int = 7) -> None:
                                         "gancho": "Una cifra real en el primer segundo" if k in (0, 2, 4) else "",
                                         "palabra": "GUIA" if k == 0 else None, "nota": ""} for k, d in enumerate(dias)]},
                              ensure_ascii=False))
+    _miniaturas_demo()
+
+
+# Miniaturas de ejemplo (imágenes reales hechas con la propia herramienta, en web/static/demo/).
+MINIS_DEMO = [
+    ("impacto", "COMMUNITY MANAGER CON IA GRATIS", "mini-1.jpg",
+     "Dice el tema y el beneficio en 5 palabras; los logos dejan claro que va de redes."),
+    ("impacto", "IA QUE HACE DE COMMUNITY MANAGER GRATIS", "mini-2.jpg",
+     "Señalar la pantalla lleva la mirada al resultado."),
+    ("objeto", "COMMUNITY MANAGER CON IA GRATIS", "mini-3.jpg", "El portátil con el panel es la prueba de lo que promete."),
+    ("estudio", "GESTIONA TUS REDES CON IA GRATIS", "mini-4.jpg", "Gesto de «así de fácil» y texto que se entiende solo."),
+]
+
+
+def _miniaturas_demo() -> None:
+    from ..db import ex as _ex
+    if q("SELECT 1 FROM miniaturas WHERE archivo LIKE 'demo/%'", one=True):
+        return
+    idea = "Vídeo: he creado una IA que hace el trabajo de un community manager, gratis y en tu ordenador."
+    for k, (estilo, texto, archivo, por_que) in enumerate(MINIS_DEMO):
+        _ex("INSERT INTO miniaturas(encargo, variante, estilo, formato, idea, texto, por_que, archivo, estado) "
+            "VALUES(?,?,?,?,?,?,?,?, 'ok')", ("demo", k, estilo, "9:16", idea, texto, por_que, "demo/" + archivo))

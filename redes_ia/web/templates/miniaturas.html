@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Miniaturas{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Miniaturas</h1><p>Portadas para TikTok, Reels y YouTube con tu cara. Escribe de qué va el vídeo y la IA propone el texto y crea la imagen. En cada versión sales con otro gesto, otro ángulo y otra ropa.</p></div>
+</div>
+
+<div class="grid g2">
+  <form method="post" action="{{ B }}/miniaturas/generar" class="card">
+    <h2 class="mb">Crear miniaturas</h2>
+    <div class="field"><label>¿De qué va el vídeo?</label>
+      <textarea name="idea" rows="5" placeholder="Pega la idea, el gancho o el guion. Ej.: «Cómo pedir 1.000 $ gratis para usar Claude: requisitos y paso a paso».">{{ texto_idea }}</textarea>
+      <p class="hint">Desde <a href="{{ B }}/ideas">Ideas</a> puedes traer una idea con su botón «Miniatura».</p></div>
+    <div class="field"><label>Estilo</label>
+      <div class="opciones">
+        {% for k, e in estilos.items() %}
+        <label class="opcion"><input type="radio" name="estilo" value="{{ k }}" {{ 'checked' if loop.first }}><span><b>{{ e.nombre }}</b><small>{{ e.desc }}</small></span></label>
+        {% endfor %}
+      </div></div>
+    <div class="row">
+      <div class="field"><label>Formato</label><select name="formato"><option value="9:16">Vertical 9:16 (TikTok, Reels, Shorts)</option><option value="16:9">Horizontal 16:9 (YouTube)</option><option value="ambos">Los dos</option></select></div>
+      <div class="field"><label>Versiones</label><select name="variantes"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+    </div>
+    <div class="field"><label>Texto fijo (opcional)</label><input type="text" name="texto" maxlength="80" placeholder="Si lo pones, todas llevan este texto. Vacío = lo propone la IA"></div>
+    <button class="btn" {{ 'disabled' if pendiente }}>{{ 'Creando…' if pendiente else 'Crear miniaturas' }}</button>
+    <p class="hint mt">{% if img_prov %}Imágenes con {{ img_prov }} ({{ img_modelo }}). Cuesta unos céntimos por imagen.{% else %}Falta elegir con qué se crean las imágenes: <a href="{{ B }}/ajustes?tab=ia#imagenes">Ajustes → IA → Imágenes</a>.{% endif %}</p>
+  </form>
+
+  <div class="card" id="caras">
+    <h2 class="mb">Tus fotos</h2>
+    <p class="hint mb">Sube de 3 a 10 fotos tuyas: de frente y de lado, con buena luz y sin gafas de sol. Sirven para que la IA te reconozca, no para copiar la pose. Se guardan solo en tu ordenador. Sin fotos, la IA usa una persona genérica.</p>
+    {% if caras %}
+    <div class="caras">
+      {% for c in caras %}
+      <div class="cara{{ ' principal' if c.principal }}">
+        <img src="{{ B }}/miniaturas/cara/{{ c.archivo }}" alt="Foto {{ loop.index }}">
+        <div class="cara-acc">
+          {% if not c.principal %}<form method="post" action="{{ B }}/miniaturas/caras/{{ c.id }}/principal"><button class="btn ghost sm" title="Usar como foto principal">Elegir</button></form>{% else %}<span class="badge ok">Principal</span>{% endif %}
+          <form method="post" action="{{ B }}/miniaturas/caras/{{ c.id }}/borrar"><button class="btn ghost sm" title="Quitar">Quitar</button></form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <form method="post" action="{{ B }}/miniaturas/caras" enctype="multipart/form-data" class="row mt">
+      <input type="file" name="fotos" accept="image/*" multiple>
+      <button class="btn secondary">Subir fotos</button>
+    </form>
+  </div>
+</div>
+
+<h2 class="mt-l mb" id="galeria">Tus miniaturas</h2>
+{% if grupos %}
+{% for g in grupos %}
+<div class="card mb mini-grupo">
+  <p class="hint mb">{{ (g[0].idea or '')[:140] }}{{ '…' if (g[0].idea or '')|length > 140 }}</p>
+  <div class="minis">
+    {% for m in g %}
+    <figure class="mini {{ 'h' if m.formato == '16:9' else 'v' }}">
+      {% if m.estado == 'ok' %}
+        {% set src = (B ~ '/static/' ~ m.archivo) if m.archivo.startswith('demo/') else (B ~ '/miniaturas/img/' ~ m.archivo) %}
+        <a href="{{ src }}" target="_blank" rel="noopener"><img src="{{ src }}" alt="{{ m.texto or '' }}" loading="lazy"></a>
+      {% elif m.estado == 'pendiente' %}<div class="mini-vacia">Creando…</div>
+      {% else %}<div class="mini-vacia err">{{ m.error or 'Error' }}</div>{% endif %}
+      <figcaption>
+        <small class="muted">{{ estilos.get(m.estilo, {}).get('nombre', m.estilo) }} · {{ m.formato }}</small>
+        {% if m.texto %}<b>{{ m.texto }}</b>{% endif %}
+        {% if m.por_que %}<small>{{ m.por_que }}</small>{% endif %}
+        <span class="row">
+          {% if m.estado == 'ok' %}<a class="btn ghost sm" href="{{ src }}" download>Descargar</a>{% endif %}
+          <form method="post" action="{{ B }}/miniaturas/{{ m.id }}/borrar"><button class="btn ghost sm">Borrar</button></form>
+        </span>
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% else %}<div class="empty">Todavía no hay ninguna. Sube tus fotos, escribe de qué va el vídeo y pulsa «Crear miniaturas».</div>{% endif %}
+{% endblock %}
+{% block scripts %}{% if pendiente %}<script>setTimeout(function () { location.reload(); }, 8000);</script>{% endif %}{% endblock %}
