@@ -27,7 +27,7 @@
   <main class="main">
     {% if ok %}<div class="flash ok">{{ ok }}</div>{% endif %}
     {% if err %}<div class="flash err">{{ err }}</div>{% endif %}
-    {% if demo %}<div class="demo-bar"><b>Modo demostración.</b> Los datos son de ejemplo (cuentas «…_demo»). Para usar tus datos, cierra y arranca sin <code>--demo</code>.</div>{% endif %}
+    {% if demo and not SOLO_LECTURA %}<div class="demo-bar"><b>Modo demostración.</b> Los datos son de ejemplo (cuentas «…_demo»). Para usar tus datos, cierra y arranca sin <code>--demo</code>.</div>{% endif %}
     {% if SOLO_LECTURA %}<div class="flash-inline mb-l">Demo con datos de ejemplo y de solo lectura. Puedes mirarlo todo y probar las Herramientas; para usarlo con tus redes, <a href="https://tools.iaquetrabaja.com/redes-ia/">descárgalo gratis</a>.</div>{% endif %}
 {% if explica %}<details class="explica" open><summary>¿Qué es esto? · {{ explica[0] }}</summary>
 <div>{% for p in explica[1] %}{% if p.startswith('- ') %}<p class="li">{{ p[2:]|negrita }}</p>{% else %}<p>{{ p|negrita }}</p>{% endif %}{% endfor %}</div></details>{% endif %}

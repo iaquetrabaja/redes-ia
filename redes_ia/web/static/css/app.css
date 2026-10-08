@@ -367,3 +367,4 @@ details.explica summary { cursor: pointer; font-weight: 500; }
 details.explica > div { margin-top: 8px; color: var(--text-2); }
 details.explica p { margin: 6px 0; } details.explica p.li { padding-left: 14px; position: relative; }
 details.explica p.li::before { content: "·"; position: absolute; left: 3px; font-weight: 700; }
+details.explica b { color: var(--text); font-weight: 600; }
