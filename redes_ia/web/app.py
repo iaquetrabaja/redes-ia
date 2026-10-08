@@ -63,10 +63,14 @@ async def _solo_local(request: Request, call_next):
     if request.method == "POST":
         origen = request.headers.get("origin") or request.headers.get("referer") or ""
         if origen and not any(origen.startswith(f"http://{h}") for h in ("127.0.0.1", "localhost")) \
-                and not origen.startswith("http://testserver") and not any(origen.startswith(o) for o in ORIGENES):
+                and not origen.startswith("http://testserver") and not any(origen.startswith(o) for o in ORIGENES) \
+                and not (ORIGENES and origen == "null"):
+            # «null»: detrás de un proxy con Referrer-Policy no-referrer el navegador no manda el origen. Solo se
+            # acepta en instalaciones publicadas (con REDES_IA_ORIGENES); en tu ordenador sigue rechazándose.
             return JSONResponse({"error": "origen no permitido"}, status_code=403)
         if SOLO_LECTURA and request.url.path != "/herramientas":
-            vuelta = (request.headers.get("referer") or "").split("?")[0] or (BASE + "/")
+            seccion = request.url.path.strip("/").split("/")[0]
+            vuelta = BASE + "/" + ("" if seccion in ("", "actualizar") else seccion)
             return RedirectResponse(vuelta + "?err=" + quote("Es una demo de solo lectura: descarga Redes IA para "
                                                               "usarlo con tus datos y tu IA."), status_code=303)
     return await call_next(request)
