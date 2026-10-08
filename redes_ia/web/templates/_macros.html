@@ -54,9 +54,9 @@
   {% endif %}
   <div class="actions">
     {% set preparando = ('guion-' ~ i.id) in en_marcha %}
-    <form class="inline" method="post" action="/ideas/{{ i.id }}/guion"><button class="btn sm" {{ 'disabled' if preparando }}>{{ 'Preparando guion…' if preparando else ('Rehacer guion' if g else 'Preparar guion') }}</button></form>
+    <form class="inline" method="post" action="{{ B }}/ideas/{{ i.id }}/guion"><button class="btn sm" {{ 'disabled' if preparando }}>{{ 'Preparando guion…' if preparando else ('Rehacer guion' if g else 'Preparar guion') }}</button></form>
     {% for s, l in (("guardada","Guardar"),("hecha","Hecha"),("descartada","Descartar")) %}{% if i.estado != s %}
-    <form class="inline" method="post" action="/ideas/{{ i.id }}/estado"><input type="hidden" name="estado" value="{{ s }}"><button class="btn ghost sm">{{ l }}</button></form>
+    <form class="inline" method="post" action="{{ B }}/ideas/{{ i.id }}/estado"><input type="hidden" name="estado" value="{{ s }}"><button class="btn ghost sm">{{ l }}</button></form>
     {% endif %}{% endfor %}
   </div>
 </div>

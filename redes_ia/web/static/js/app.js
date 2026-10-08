@@ -22,7 +22,7 @@
     btn && btn.addEventListener("click", async () => {
       const prov = (document.querySelector("input[name=proveedor]:checked") || {}).value;
       btn.textContent = "Cargando…";
-      const r = await fetch("/ajustes/modelos?proveedor=" + encodeURIComponent(prov)).then(x => x.json());
+      const r = await fetch((window.B || "") + "/ajustes/modelos?proveedor=" + encodeURIComponent(prov)).then(x => x.json());
       btn.textContent = "Ver modelos disponibles";
       if (r.error) { alert(r.error); return; }
       const dl = document.getElementById("lista-modelos");
@@ -35,9 +35,16 @@
   if (viva) {
     const t = setInterval(async () => {
       try {
-        const r = await fetch("/api/estado").then(x => x.json());
+        const r = await fetch((window.B || "") + "/api/estado").then(x => x.json());
         if (!r.en_marcha.length) { clearInterval(t); location.reload(); }
       } catch (e) {}
     }, 5000);
   }
+})();
+
+// El recuadro «¿Qué es esto?» va justo debajo del título (o de las pestañas, si las hay).
+(function () {
+  var e = document.querySelector("details.explica"); if (!e) return;
+  var ancla = document.querySelector(".main .tabs") || document.querySelector(".main .page-head");
+  if (ancla) ancla.after(e);
 })();

@@ -4,8 +4,9 @@
 {% block content %}
 <div class="page-head">
   <div><h1>Ideas</h1><p>De la competencia que supera su propia media, tus mejores vídeos, las tendencias de tu nicho y lo que te preguntan en comentarios. Con nota del 0 al 10.</p></div>
-  <form method="post" action="/ideas/generar"><button class="btn" {{ 'disabled' if 'ideas' in en_marcha }}>{{ 'Buscando ideas…' if 'ideas' in en_marcha else 'Buscar ideas ahora' }}</button></form>
+  <form method="post" action="{{ B }}/ideas/generar"><button class="btn" {{ 'disabled' if 'ideas' in en_marcha }}>{{ 'Buscando ideas…' if 'ideas' in en_marcha else 'Buscar ideas ahora' }}</button></form>
 </div>
+{% if explica_guion %}<details class="explica"><summary>¿Qué hace «Preparar guion»?</summary><div>{% for p in explica_guion[1] %}{% if p.startswith('- ') %}<p class="li">{{ p[2:]|negrita }}</p>{% else %}<p>{{ p|negrita }}</p>{% endif %}{% endfor %}</div></details>{% endif %}
 <div class="tabs">
   {% for k, l in (("activas","Activas"),("guardada","Guardadas"),("hecha","Hechas"),("descartada","Descartadas"),("todas","Todas")) %}
   <a href="?estado={{ k }}&tipo={{ tipo }}&orden={{ orden }}" class="{{ 'on' if estado == k }}">{{ l }}</a>{% endfor %}
@@ -21,7 +22,7 @@
   </div>
 </div>
 <details class="card mb-l"><summary>Apuntar una idea mía</summary>
-  <form method="post" action="/ideas/nueva" class="mt">
+  <form method="post" action="{{ B }}/ideas/nueva" class="mt">
     <div class="field"><label>Título</label><input type="text" name="titulo" required maxlength="200"></div>
     <div class="row"><div class="field"><label>Gancho (opcional)</label><input type="text" name="gancho"></div>
     <div class="field"><label>Por qué o enlace de referencia (opcional)</label><input type="text" name="por_que"></div></div>

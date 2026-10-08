@@ -359,3 +359,11 @@ details summary { cursor: pointer; color: var(--text-2); font-size: 14px; }
 .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 70px; }
 .mini-chart i { flex: 1; background: var(--border-strong); border-radius: 2px 2px 0 0; min-height: 2px; }
 .mini-chart i:last-child { background: var(--text); }
+
+/* «¿Qué es esto?» */
+details.explica { border: 1px solid var(--border); border-left: 3px solid var(--accent, #d24d1e); border-radius: 8px;
+  padding: 10px 14px; margin: 0 0 18px; background: var(--surface, transparent); font-size: 14px; }
+details.explica summary { cursor: pointer; font-weight: 500; }
+details.explica > div { margin-top: 8px; color: var(--text-2); }
+details.explica p { margin: 6px 0; } details.explica p.li { padding-left: 14px; position: relative; }
+details.explica p.li::before { content: "·"; position: absolute; left: 3px; font-weight: 700; }

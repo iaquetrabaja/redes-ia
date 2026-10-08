@@ -8,7 +8,7 @@
 </div>
 
 {% if tab == "ia" %}
-<form method="post" action="/ajustes/ia" class="card">
+<form method="post" action="{{ B }}/ajustes/ia" class="card">
   <h2 class="mb">Proveedor de IA</h2>
   <div class="opciones">
     {% for k, p in proveedores.items() %}
@@ -27,7 +27,7 @@
 
 {% elif tab == "redes" %}
 <div class="grid g2 mb-l">
-  <form method="post" action="/ajustes/cuenta" class="card">
+  <form method="post" action="{{ B }}/ajustes/cuenta" class="card">
     <h2 class="mb">Añadir cuenta</h2>
     <div class="row"><div class="field w-s"><label>Red</label><select name="red"><option value="tiktok">TikTok</option><option value="youtube">YouTube Shorts</option><option value="instagram">Instagram (competencia)</option></select></div>
       <div class="field"><label>Usuario o enlace</label><input type="text" name="usuario" placeholder="@usuario" required></div></div>
@@ -35,7 +35,7 @@
     <button class="btn">Añadir</button>
     <p class="hint mt">TikTok y YouTube se leen sin contraseñas, solo lo público: los ~10 últimos vídeos de cada cuenta con sus vistas. Tus vídeos, además, con me gusta, compartidos, guardados y comentarios.</p>
   </form>
-  <form method="post" action="/ajustes/instagram" class="card">
+  <form method="post" action="{{ B }}/ajustes/instagram" class="card">
     <h2 class="mb">Conectar tu Instagram</h2>
     <p class="muted">Con la API oficial: cuenta profesional y un token de «API de Instagram con inicio de sesión de Instagram». Paso a paso en la guía (docs/GUIA.md, apartado «Conectar Instagram»).</p>
     <div class="field"><label>Token de acceso de Instagram {% if ig %}<span class="badge ok">guardado {{ ig }}</span>{% endif %}</label><input type="password" name="token" autocomplete="off"></div>
@@ -45,14 +45,14 @@
     <button class="btn">Guardar</button>
   </form>
 </div>
-<div class="section-head"><h2>Tus cuentas y la competencia</h2><form method="post" action="/actualizar"><button class="btn secondary sm">Actualizar todo ahora</button></form></div>
+<div class="section-head"><h2>Tus cuentas y la competencia</h2><form method="post" action="{{ B }}/actualizar"><button class="btn secondary sm">Actualizar todo ahora</button></form></div>
 <div class="table-wrap mb-l"><table class="table">
   <thead><tr><th>Cuenta</th><th>Red</th><th>Tipo</th><th class="r">Seguidores</th><th>Última lectura</th><th></th></tr></thead>
   <tbody>{% for c in cuentas %}<tr><td><b>@{{ c.usuario }}</b>{% if c.demo %} <span class="badge">demo</span>{% endif %}{% if c.error %}<br><small class="chk FAIL">{{ c.error[:140] }}</small>{% endif %}</td><td>{{ REDES.get(c.red, c.red) }}</td><td>{{ 'Mía' if c.mia else 'Competencia' }}</td><td class="r num">{{ c.seguidores|miles }}</td><td><small class="muted">{{ c.ultimo or '—' }}</small></td>
-    <td class="r"><form class="inline" method="post" action="/ajustes/cuenta/{{ c.id }}/borrar" onsubmit="return confirm('¿Quitar @{{ c.usuario }} y sus datos?')"><button class="btn danger sm">Quitar</button></form></td></tr>
+    <td class="r"><form class="inline" method="post" action="{{ B }}/ajustes/cuenta/{{ c.id }}/borrar" onsubmit="return confirm('¿Quitar @{{ c.usuario }} y sus datos?')"><button class="btn danger sm">Quitar</button></form></td></tr>
   {% else %}<tr><td colspan="6" class="muted">Ninguna todavía.</td></tr>{% endfor %}</tbody>
 </table></div>
-<form method="post" action="/ajustes/csv" enctype="multipart/form-data" class="card">
+<form method="post" action="{{ B }}/ajustes/csv" enctype="multipart/form-data" class="card">
   <h2 class="mb">Competencia de Instagram a mano (CSV)</h2>
   <p class="muted">Instagram no deja leer cuentas ajenas con tu token. Si quieres comparar, pega sus vídeos: columnas <code>cuenta,url,texto,vistas,likes,fecha</code> (vale coma o punto y coma; «12k» o «1,2M» también).</p>
   <textarea name="csv" rows="4" placeholder="cuenta;url;texto;vistas;likes;fecha&#10;otra_cuenta;https://www.instagram.com/reel/XXXX/;Nadie te cuenta…;120k;8400;2026-10-01"></textarea>
@@ -60,7 +60,7 @@
 </form>
 
 {% elif tab == "general" %}
-<form method="post" action="/ajustes/general" class="card">
+<form method="post" action="{{ B }}/ajustes/general" class="card">
   <div class="field"><label>De qué va tu canal y para quién (lo lee la IA en todo)</label><textarea name="contexto" rows="3">{{ cfg('contexto') }}</textarea></div>
   <div class="field"><label>Temas para buscar tendencias (separados por comas)</label><input type="text" name="temas" value="{{ cfg('temas') }}" placeholder="IA, LLM, agentes, automatización, ChatGPT…"></div>
   <div class="field"><label>Subreddits (separados por comas)</label><input type="text" name="subreddits" value="{{ cfg('subreddits') }}" placeholder="artificial, ChatGPT, LocalLLaMA"></div>

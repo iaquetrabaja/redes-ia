@@ -1,5 +1,6 @@
 """Panel web local (FastAPI). Solo escucha en 127.0.0.1: nadie de fuera de tu ordenador puede abrirlo."""
 import json
+import re
 import sys
 from pathlib import Path
 from urllib.parse import quote
@@ -18,8 +19,16 @@ from ..servicios import automatizaciones, datos, estudio, ideas, metricas
 AQUI = Path(__file__).parent
 app = FastAPI(title="Redes IA", version=__version__, docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=AQUI / "static"), name="static")
+import os as _os
+
+# Para publicar una demo detrás de un proxy: prefijo de la URL, modo solo lectura y orígenes permitidos.
+# En tu ordenador no hace falta tocar nada.
+BASE = (_os.environ.get("REDES_IA_BASE") or "").rstrip("/")
+SOLO_LECTURA = _os.environ.get("REDES_IA_SOLO_LECTURA") == "1"
+ORIGENES = [o.strip() for o in (_os.environ.get("REDES_IA_ORIGENES") or "").split(",") if o.strip()]
+
 plantillas = Jinja2Templates(directory=AQUI / "templates")
-plantillas.env.globals.update(TIPOS=ideas.TIPOS, REDES=datos.REDES, CATEGORIAS=estudio.CATEGORIAS, version=__version__)
+plantillas.env.globals.update(B=BASE, SOLO_LECTURA=SOLO_LECTURA, TIPOS=ideas.TIPOS, REDES=datos.REDES, CATEGORIAS=estudio.CATEGORIAS, version=__version__)
 
 
 def miles(n):
@@ -34,6 +43,14 @@ def miles(n):
 plantillas.env.filters["miles"] = miles
 
 
+def _negrita(texto: str):
+    from markupsafe import Markup, escape
+    return Markup(re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", str(escape(texto))))
+
+
+plantillas.env.filters["negrita"] = _negrita
+
+
 @app.on_event("startup")
 def _arranque():
     iniciar()
@@ -46,12 +63,20 @@ async def _solo_local(request: Request, call_next):
     if request.method == "POST":
         origen = request.headers.get("origin") or request.headers.get("referer") or ""
         if origen and not any(origen.startswith(f"http://{h}") for h in ("127.0.0.1", "localhost")) \
-                and not origen.startswith("http://testserver"):
+                and not origen.startswith("http://testserver") and not any(origen.startswith(o) for o in ORIGENES):
             return JSONResponse({"error": "origen no permitido"}, status_code=403)
+        if SOLO_LECTURA and request.url.path != "/herramientas":
+            vuelta = (request.headers.get("referer") or "").split("?")[0] or (BASE + "/")
+            return RedirectResponse(vuelta + "?err=" + quote("Es una demo de solo lectura: descarga Redes IA para "
+                                                              "usarlo con tus datos y tu IA."), status_code=303)
     return await call_next(request)
 
 
 def ver(request: Request, nombre: str, **ctx):
+    from .explicaciones import EXPLICACIONES, clave
+    ctx.setdefault("explica", EXPLICACIONES.get(clave(request.url.path, request.query_params)))
+    if nombre == "ideas.html":
+        ctx.setdefault("explica_guion", EXPLICACIONES.get("guion"))
     ctx.update(request=request, ruta=request.url.path, ok=request.query_params.get("ok"),
                err=request.query_params.get("err"), demo=A.get("modo_demo") == "1", en_marcha=tareas.en_marcha(),
                ia_ok=llm.configurado(), proveedor=llm.PROVEEDORES.get(llm.proveedor(), {}).get("nombre"))
@@ -65,6 +90,8 @@ def ir(url: str, ok: str | None = None, err: str | None = None) -> RedirectRespo
         url += f"{sep}ok={quote(ok)}"
     elif err:
         url += f"{sep}err={quote(err)}"
+    if url.startswith("/") and not url.startswith(BASE + "/"):
+        url = BASE + url
     return RedirectResponse(url + (f"#{frag}" if frag else ""), status_code=303)
 
 
@@ -81,7 +108,7 @@ def _necesita_ia(destino: str):
 def resumen(request: Request, dias: int = 0, red: str = ""):
     if (A.get("modo_demo") != "1" and not llm.configurado() and not q("SELECT 1 FROM cuentas", one=True)
             and not request.query_params.get("saltar")):
-        return RedirectResponse("/bienvenida", status_code=303)
+        return RedirectResponse(BASE + "/bienvenida", status_code=303)
     dias = dias if dias in (3, 7, 30, 90) else int(A.get("dias_resumen") or 7)
     red = red if red in datos.REDES else ""
     r = metricas.resumen(dias, red or None)

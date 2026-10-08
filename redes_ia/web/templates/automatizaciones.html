@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-head">
   <div><h1>Automatizaciones con IA</h1><p>Cada lunes, 3 ideas de vídeo sobre una tarea que la IA hace sola y que sirve a muchos oficios (partes de trabajo, citas, mensajes repetidos…). Fáciles de montar, sin programar, con el guion por escenas para que el vídeo no sea solo pantalla.</p></div>
-  <form method="post" action="/automatizaciones/generar"><button class="btn" {{ 'disabled' if 'automatizaciones' in en_marcha }}>{{ 'Pensando…' if 'automatizaciones' in en_marcha else 'Nuevas automatizaciones' }}</button></form>
+  <form method="post" action="{{ B }}/automatizaciones/generar"><button class="btn" {{ 'disabled' if 'automatizaciones' in en_marcha }}>{{ 'Pensando…' if 'automatizaciones' in en_marcha else 'Nuevas automatizaciones' }}</button></form>
 </div>
 {% if ideas %}<div class="grid g2">{% for i in ideas %}{{ tarjeta_idea(i, en_marcha) }}{% endfor %}</div>
 {% else %}<div class="empty">Todavía no hay ninguna. Pulsa «Nuevas automatizaciones».</div>{% endif %}

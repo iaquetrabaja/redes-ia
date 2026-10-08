@@ -12,7 +12,7 @@
 {% if tab == "auditoria" %}
 <div class="row mb-l" style="justify-content:space-between;align-items:center">
   <div class="seg"><a href="?tab=auditoria" class="{{ 'on' if not red }}">Todo</a>{% for k, l in REDES.items() %}<a href="?tab=auditoria&red={{ k }}" class="{{ 'on' if red == k }}">{{ l }}</a>{% endfor %}</div>
-  <form method="post" action="/estudio/auditoria"><button class="btn" {{ 'disabled' if 'auditoria' in en_marcha }}>{{ 'Analizando…' if 'auditoria' in en_marcha else 'Sacar conclusiones con IA' }}</button></form>
+  <form method="post" action="{{ B }}/estudio/auditoria"><button class="btn" {{ 'disabled' if 'auditoria' in en_marcha }}>{{ 'Analizando…' if 'auditoria' in en_marcha else 'Sacar conclusiones con IA' }}</button></form>
 </div>
 {% set c = a.conclusiones %}
 {% if c %}
@@ -42,7 +42,7 @@
   <div class="seg"><a href="?tab=comentarios&estado={{ estado }}" class="{{ 'on' if not cat }}">Todos</a>{% for k, l in CATEGORIAS.items() if k != 'ruido' %}<a href="?tab=comentarios&cat={{ k }}&estado={{ estado }}" class="{{ 'on' if cat == k }}">{{ l }}{% if conteo.get(k) %} · {{ conteo[k] }}{% endif %}</a>{% endfor %}</div>
   <div class="row">
     <div class="seg"><a href="?tab=comentarios&cat={{ cat }}&estado=pendiente" class="{{ 'on' if estado == 'pendiente' }}">Pendientes</a><a href="?tab=comentarios&cat={{ cat }}&estado=hecho" class="{{ 'on' if estado == 'hecho' }}">Respondidos</a></div>
-    <form method="post" action="/estudio/comentarios"><button class="btn" {{ 'disabled' if 'comentarios' in en_marcha }}>{{ 'Clasificando…' if 'comentarios' in en_marcha else 'Clasificar comentarios' + (' (' ~ sin_clasificar ~ ' nuevos)' if sin_clasificar else '') }}</button></form>
+    <form method="post" action="{{ B }}/estudio/comentarios"><button class="btn" {{ 'disabled' if 'comentarios' in en_marcha }}>{{ 'Clasificando…' if 'comentarios' in en_marcha else 'Clasificar comentarios' + (' (' ~ sin_clasificar ~ ' nuevos)' if sin_clasificar else '') }}</button></form>
   </div>
 </div>
 <p class="hint mb-l">Los comentarios de tus últimos vídeos se leen al actualizar los datos. La IA los ordena (primero posibles clientes y preguntas) y te deja un borrador para copiar. Los de una sola palabra («info», «link») se apartan.</p>
@@ -50,7 +50,7 @@
 <div class="card est-com mb-s">
   <div class="row" style="justify-content:space-between;align-items:center">
     <div><span class="badge {{ 'accent' if c.categoria in ('cliente','pregunta') }}">{{ CATEGORIAS.get(c.categoria, c.categoria) }}</span> <b>@{{ c.autor }}</b> <small class="muted">{{ REDES.get(c.red, c.red) }} · {{ (c.creado or '')[:10] }}{% if c.motivo %} · {{ c.motivo }}{% endif %}</small></div>
-    <form class="inline" method="post" action="/comentarios/{{ c.id }}/estado"><input type="hidden" name="estado" value="{{ 'pendiente' if c.estado == 'hecho' else 'hecho' }}"><button class="btn ghost sm">{{ 'Volver a pendiente' if c.estado == 'hecho' else 'Respondido' }}</button></form>
+    <form class="inline" method="post" action="{{ B }}/comentarios/{{ c.id }}/estado"><input type="hidden" name="estado" value="{{ 'pendiente' if c.estado == 'hecho' else 'hecho' }}"><button class="btn ghost sm">{{ 'Volver a pendiente' if c.estado == 'hecho' else 'Respondido' }}</button></form>
   </div>
   <p class="est-txt">«{{ c.texto }}»</p>
   {% if c.borrador %}<div class="est-borr"><span>{{ c.borrador }}</span><button type="button" class="btn ghost sm" data-copy="{{ c.borrador }}">Copiar</button></div>{% endif %}
@@ -61,7 +61,7 @@
 {% elif tab == "plan" %}
 <div class="row mb-l" style="justify-content:space-between;align-items:center">
   <p class="muted" style="margin:0">Sale de tus ideas guardadas, las mejores de la semana y lo que dice la auditoría.{% if plan %} Creado {{ plan.creado }}.{% endif %}</p>
-  <form method="post" action="/estudio/plan"><button class="btn" {{ 'disabled' if 'plan' in en_marcha }}>{{ 'Preparando…' if 'plan' in en_marcha else ('Rehacer el plan' if plan else 'Preparar el plan de la semana') }}</button></form>
+  <form method="post" action="{{ B }}/estudio/plan"><button class="btn" {{ 'disabled' if 'plan' in en_marcha }}>{{ 'Preparando…' if 'plan' in en_marcha else ('Rehacer el plan' if plan else 'Preparar el plan de la semana') }}</button></form>
 </div>
 {% if plan %}
 {% if plan.foco %}<p class="ask mb-l"><b>Foco de la semana:</b> {{ plan.foco }}</p>{% endif %}
@@ -73,14 +73,14 @@
     {% if d.gancho %}<p>«{{ d.gancho }}»</p>{% endif %}
     {% if d.palabra %}<p class="hint">Palabra clave: <b>{{ d.palabra }}</b></p>{% endif %}
     {% if d.nota %}<p class="hint">{{ d.nota }}</p>{% endif %}
-    {% if d.idea_id %}<a class="hint" href="/ideas?estado=todas#idea-{{ d.idea_id }}">Ver la idea</a>{% endif %}
+    {% if d.idea_id %}<a class="hint" href="{{ B }}/ideas?estado=todas#idea-{{ d.idea_id }}">Ver la idea</a>{% endif %}
   </div>{% endfor %}</div>
 {% else %}<div class="empty">Aún no hay plan. Guarda algunas ideas y pulsa «Preparar el plan de la semana».</div>{% endif %}
 
 {% elif tab == "voz" %}
 <div class="card">
   <p class="muted">Cómo hablas en tus vídeos. La leen las ideas, los guiones y los borradores de respuesta para que suenen a ti.</p>
-  <form method="post" action="/estudio/voz">
+  <form method="post" action="{{ B }}/estudio/voz">
     <textarea name="voz" rows="14" placeholder="Quién eres, a quién hablas, tu tono, frases que usas, palabras que nunca dirías…">{{ voz }}</textarea>
     <div class="row mt"><button class="btn">Guardar</button><button class="btn secondary" name="generar" value="1">Escribirla a partir de mis vídeos</button></div>
   </form>

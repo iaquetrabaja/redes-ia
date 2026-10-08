@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bienvenida · Redes IA</title>
-<link rel="stylesheet" href="/static/css/app.css?v={{ version }}">
-<script src="/static/js/theme.js"></script>
+<link rel="stylesheet" href="{{ B }}/static/css/app.css?v={{ version }}">
+<script src="{{ B }}/static/js/theme.js"></script>
 </head>
 <body>
 {% if ok %}<div class="flash ok">{{ ok }}</div>{% endif %}
@@ -15,7 +15,7 @@
   <div class="pasos"><span class="{{ 'on' if paso == 1 }}">1. Conectar una IA</span><span>→</span><span class="{{ 'on' if paso == 2 }}">2. Tus cuentas</span></div>
 
   {% if paso == 1 %}
-  <form method="post" action="/bienvenida/ia" class="card">
+  <form method="post" action="{{ B }}/bienvenida/ia" class="card">
     <div class="opciones">
       {% for k, p in proveedores.items() %}
       <label class="opcion"><input type="radio" name="proveedor" value="{{ k }}" {{ 'checked' if (actual or 'gemini') == k }}>
@@ -28,9 +28,9 @@
     <button class="btn">Conectar y probar</button>
     <p class="hint mt">La clave se guarda solo en tu ordenador (carpeta datos/).</p>
   </form>
-  <p class="mt"><a href="/?saltar=1" class="hint">Prefiero verlo primero: abre la app con <code>--demo</code> para ver datos de ejemplo.</a></p>
+  <p class="mt"><a href="{{ B }}/?saltar=1" class="hint">Prefiero verlo primero: abre la app con <code>--demo</code> para ver datos de ejemplo.</a></p>
   {% else %}
-  <form method="post" action="/bienvenida/cuentas" class="card">
+  <form method="post" action="{{ B }}/bienvenida/cuentas" class="card">
     <div class="field"><label>Tu usuario de TikTok</label><input type="text" name="tiktok" placeholder="@tu_usuario"></div>
     <div class="field"><label>Cuentas de tu competencia o referentes en TikTok (separadas por comas)</label><textarea name="competencia" rows="3" placeholder="@referente1, @referente2, @referente3"></textarea>
       <p class="hint">De 3 a 10 cuentas de tu nicho. De ellas salen las ideas: sus vídeos que superan su propia media.</p></div>
@@ -40,6 +40,6 @@
   </form>
   {% endif %}
 </div>
-<script src="/static/js/app.js?v={{ version }}"></script>
+<script src="{{ B }}/static/js/app.js?v={{ version }}"></script>
 </body>
 </html>

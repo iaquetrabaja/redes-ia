@@ -9,7 +9,7 @@
   <a href="?h={{ k }}" class="{{ 'on' if h == k }}">{{ l }}</a>{% endfor %}
 </div>
 {% if error %}<div class="flash-inline err mb-l">{{ error }}</div>{% endif %}
-<form method="post" action="/herramientas" class="card">
+<form method="post" action="{{ B }}/herramientas" class="card">
   <input type="hidden" name="h" value="{{ h }}">
   {% if h == "gancho" %}
     <label>Uno o varios ganchos, uno por línea</label>

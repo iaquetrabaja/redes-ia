@@ -9,12 +9,12 @@
       {% for k, l in REDES.items() %}<a href="?dias={{ dias }}&red={{ k }}" class="{{ 'on' if red == k }}">{{ l }}</a>{% endfor %}
     </div>
     <div class="seg">{% for d in (3, 7, 30, 90) %}<a href="?dias={{ d }}{% if red %}&red={{ red }}{% endif %}" class="{{ 'on' if dias == d }}">{{ d }} días</a>{% endfor %}</div>
-    <form method="post" action="/actualizar"><button class="btn secondary">Actualizar datos</button></form>
+    <form method="post" action="{{ B }}/actualizar"><button class="btn secondary">Actualizar datos</button></form>
   </div>
 </div>
 
 {% if not hay_cuentas %}
-<div class="empty mb-l">Aún no has añadido tu cuenta. Ve a <a href="/ajustes?tab=redes">Ajustes → Redes</a> y pon tu usuario de TikTok (y, si quieres, conecta Instagram).</div>
+<div class="empty mb-l">Aún no has añadido tu cuenta. Ve a <a href="{{ B }}/ajustes?tab=redes">Ajustes → Redes</a> y pon tu usuario de TikTok (y, si quieres, conecta Instagram).</div>
 {% endif %}
 
 <div class="grid g5 kpis mb-l">
@@ -41,7 +41,7 @@
     {% else %}<p class="muted">Sin cuentas propias todavía.</p>{% endfor %}
   </div>
   <div class="card">
-    <div class="section-head"><h2>Últimas tareas</h2><a class="hint" href="/ajustes?tab=general">Programación</a></div>
+    <div class="section-head"><h2>Últimas tareas</h2><a class="hint" href="{{ B }}/ajustes?tab=general">Programación</a></div>
     {% for t in tareas %}<p class="mb-s"><span class="chk {{ 'PASS' if t.estado == 'ok' else ('FAIL' if t.estado == 'error' else 'WARN') }}">{{ t.estado }}</span> <b>{{ t.tipo }}</b> <small class="muted">{{ (t.inicio or '')[:16] }}</small><br><small class="muted">{{ (t.detalle or '')[:140] }}</small></p>
     {% else %}<p class="muted">Todavía no se ha ejecutado nada.</p>{% endfor %}
   </div>
